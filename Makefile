@@ -1,7 +1,9 @@
 # Investigado y colocado para realizar compilacion con solo colocar make
 # Compilador
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+#Daba error
+#CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -std=c++20 -Wall -Iinclude
 
 # Carpetas
 SRC_DIR = src

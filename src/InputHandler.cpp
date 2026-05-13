@@ -1,15 +1,11 @@
 #include "InputHandler.h"
-#include "ProjectileManager.h"
-
-#include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <cstdio>
+#include <sys/ioctl.h>
 
-// Se guardan los ajustes originales de la terminal
-static struct termios originalTermios;
+// ─────────────────────────────
+// Constructor / Destructor
+// ─────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
 InputHandler::InputHandler() {
     enableRawMode();
 }
@@ -18,113 +14,118 @@ InputHandler::~InputHandler() {
     disableRawMode();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────
+// RAW MODE (CLAVE)
+// ─────────────────────────────
+
 void InputHandler::enableRawMode() {
     tcgetattr(STDIN_FILENO, &originalTermios);
 
     struct termios raw = originalTermios;
-    // Desactiva echo y modo canónico (espera de Enter)
-    raw.c_lflag &= ~(ECHO | ICANON);
-    // No bloqueante: read() devuelve inmediatamente
-    raw.c_cc[VMIN]  = 0;
+
+    // Desactivar modo canónico y echo
+    raw.c_lflag &= ~(ICANON | ECHO);
+
+    // Lectura no bloqueante sin usar fcntl
+    raw.c_cc[VMIN] = 0;
     raw.c_cc[VTIME] = 0;
 
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 }
 
 void InputHandler::disableRawMode() {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &originalTermios);
+    tcsetattr(STDIN_FILENO, TCSANOW, &originalTermios);
 }
+
+// ─────────────────────────────
+// Leer tecla
+// ─────────────────────────────
 
 int InputHandler::readKey() {
-    char c;
-    int n = read(STDIN_FILENO, &c, 1);
-    return (n == 1) ? static_cast<int>(c) : -1;
+    fd_set set;
+    struct timeval timeout;
+
+    FD_ZERO(&set);
+    FD_SET(STDIN_FILENO, &set);
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0; // no bloqueante
+
+    int rv = select(STDIN_FILENO + 1, &set, NULL, NULL, &timeout);
+
+    if (rv > 0) {
+        unsigned char ch;
+        if (read(STDIN_FILENO, &ch, 1) == 1)
+            return ch;
+    }
+
+    return -1;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────
+// INPUT PRINCIPAL (FIX REAL)
+// ─────────────────────────────
+
 void InputHandler::processInput(GameState& gs) {
-    int key = readKey();
-    if (key == -1) return;  // No hay tecla pendiente
+    int key;
 
-    // ── Teclas globales ───────────────────────────────────────────────────
-    if (key == 'p' || key == 'P') {
-        // Toggle pausa
-        GameStatus cur = gs.status.load();
-        if (cur == GameStatus::RUNNING)
-            gs.status.store(GameStatus::PAUSED);
-        else if (cur == GameStatus::PAUSED)
-            gs.status.store(GameStatus::RUNNING);
-        return;
-    }
-    if (key == 27) { // ESC
-        gs.status.store(GameStatus::GAME_OVER);
-        gs.running.store(false);
-        return;
-    }
+    // 🔥 Leer TODAS las teclas disponibles
+    while ((key = readKey()) != -1) {
 
-    // Solo procesar movimiento si el juego está corriendo
-    if (gs.status.load() != GameStatus::RUNNING) return;
+        // ───── GLOBAL ─────
+        if (key == 27) { // ESC
+            gs.running.store(false);
+            gs.status.store(GameStatus::GAME_OVER);
+            continue;
+        }
 
-    std::lock_guard<std::mutex> lock(gs.pitMutex);
-    Player& pit = gs.pit;
+        if (key == 'p' || key == 'P') {
+            GameStatus cur = gs.status.load();
+            if (cur == GameStatus::RUNNING)
+                gs.status.store(GameStatus::PAUSED);
+            else if (cur == GameStatus::PAUSED)
+                gs.status.store(GameStatus::RUNNING);
+            continue;
+        }
 
-    switch (key) {
-        // ── Movimiento ────────────────────────────────────────────────────
-        case 'a': case 'A':
-            pit.pos.x = std::max(0, pit.pos.x - 1);
-            pit.facing = Direction::LEFT;
-            break;
+        GameStatus state = gs.status.load();
 
-        case 'd': case 'D':
-            pit.pos.x = std::min(SCREEN_WIDTH - 1, pit.pos.x + 1);
-            pit.facing = Direction::RIGHT;
-            break;
-
-        // ── Salto ─────────────────────────────────────────────────────────
-        case 'w': case 'W':
-            if (pit.onGround) {
-                pit.velY    = -3;   // impulso inicial
-                pit.onGround = false;
+        // ───── MENU ─────
+        if (state == GameStatus::MENU) {
+            if (key == '1') {
+                gs.status.store(GameStatus::RUNNING);
             }
-            break;
-
-        // ── Agacharse ─────────────────────────────────────────────────────
-        case 's': case 'S':
-            pit.crouching = true;
-            break;
-
-        // ── Disparar (dirección actual) ───────────────────────────────────
-        case ' ':
-            // Libera el lock de pit antes de tomar el de proyectiles
-            // Guardamos la dirección antes de soltar el mutex
-            {
-                Direction d = pit.facing;
-                // El lock de pit se libera al salir del bloque switch,
-                // pero necesitamos disparar fuera del lock de pit.
-                // Usamos una flag local para disparar después.
-                // (Simplificación: disparar directamente; el semáforo
-                //  en ProjectileManager protege el recurso)
-                lock.~lock_guard(); // No se puede re-tomar; disparar tras return
-                // NOTA: en implementación completa se usa una cola de acciones.
-                ProjectileManager::firePlayerProjectile(gs, d);
+            else if (key == '2') {
+                gs.status.store(GameStatus::RUNNING);
             }
-            return; // Salimos antes de que el lock_guard intente destruirse de nuevo
+            continue;
+        }
 
-        // ── Disparar arriba ───────────────────────────────────────────────
-        case 'c': case 'C':
-            {
-                lock.~lock_guard();
-                ProjectileManager::firePlayerProjectile(gs, Direction::UP);
-            }
-            return;
+        // ───── SOLO EN JUEGO ─────
+        if (state != GameStatus::RUNNING)
+            continue;
 
-        default:
-            break;
-    }
+        // ───── CONTROLES ─────
+        switch (key) {
+            case 'w': case 'W':
+                // mover arriba
+                break;
 
-    // Al soltar 's' el personaje se levanta (simplificado: se resetea cada frame)
-    if (key != 's' && key != 'S') {
-        pit.crouching = false;
+            case 's': case 'S':
+                // mover abajo
+                break;
+
+            case 'a': case 'A':
+                // mover izquierda
+                break;
+
+            case 'd': case 'D':
+                // mover derecha
+                break;
+
+            case ' ':
+                // disparar
+                break;
+        }
     }
 }

@@ -3,12 +3,25 @@
 
 #include "GameState.h"
 
+// Linux / WSL
+#include <termios.h>
+#include <unistd.h>
+
 class InputHandler {
 public:
     InputHandler();
+    ~InputHandler();
 
-    // Procesa la entrada del usuario en tiempo real
+    // Función principal
     void processInput(GameState& gs);
+
+private:
+    void enableRawMode();
+    void disableRawMode();
+
+    int readKey();
+
+    struct termios originalTermios;
 };
 
 #endif
