@@ -1,39 +1,21 @@
 #include "CollisionSystem.h"
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
-void CollisionSystem::checkAll(GameState& gs, const Level& level) {
-    checkPitVsPlatforms(gs, level);
+void CollisionSystem::checkAll(GameState& gs, const Level& /*level*/) {
     checkPitVsEnemies(gs);
     checkPitOutOfBounds(gs);
 }
 
-// ─── Pit ↔ Plataformas ────────────────────────────────────────────────────────
-void CollisionSystem::checkPitVsPlatforms(GameState& gs, const Level& level) {
-    const auto& plats = level.getPlatforms();
-    std::lock_guard<std::mutex> pl(gs.pitMutex);
-
-    if (gs.pit.velY <= 0) return;
-
-    for (const auto& plat : plats) {
-        if (gs.pit.pos.y == plat.y &&
-            gs.pit.pos.x >= plat.x &&
-            gs.pit.pos.x < plat.x + plat.length) {
-            gs.pit.velY     = 0;
-            gs.pit.onGround = true;
-            return;
-        }
-    }
-    gs.pit.onGround = false;
-}
-
 // ─── Pit ↔ Enemigo (contacto directo) ────────────────────────────────────────
 void CollisionSystem::checkPitVsEnemies(GameState& gs) {
+    // Snapshot de Pit sin mantener pitMutex mientras tomamos enemyMutex
     Player pitSnap;
     {
         std::lock_guard<std::mutex> pl(gs.pitMutex);
         pitSnap = gs.pit;
     }
 
+    // Buscar colisiones con enemigos
     std::vector<int> hitIndices;
     {
         std::lock_guard<std::mutex> el(gs.enemyMutex);
@@ -57,6 +39,7 @@ void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
 
     if (gs.pit.pos.y < SCREEN_HEIGHT) return;
 
+    // Reaparecer en posición inicial
     gs.pit.pos      = {SCREEN_WIDTH / 2, SCREEN_HEIGHT - 2};
     gs.pit.velY     = 0;
     gs.pit.onGround = true;
