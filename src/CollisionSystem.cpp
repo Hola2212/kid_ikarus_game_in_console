@@ -8,10 +8,15 @@ void CollisionSystem::checkAll(GameState& gs, const Level& /*level*/) {
 
 // ─── Pit ↔ Enemigo (contacto directo) ────────────────────────────────────────
 void CollisionSystem::checkPitVsEnemies(GameState& gs) {
-    // Snapshot de Pit sin mantener pitMutex mientras tomamos enemyMutex
+    // Snapshot de Pit
     Player pitSnap;
     {
         std::lock_guard<std::mutex> pl(gs.pitMutex);
+        // Si está invencible, solo decrementar el contador y salir
+        if (gs.pit.invincibleTicks > 0) {
+            gs.pit.invincibleTicks--;
+            return;
+        }
         pitSnap = gs.pit;
     }
 
@@ -43,6 +48,7 @@ void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
     gs.pit.pos      = {SCREEN_WIDTH / 2, SCREEN_HEIGHT - 2};
     gs.pit.velY     = 0;
     gs.pit.onGround = true;
+    gs.pit.invincibleTicks = 15;  // invencibilidad al reaparecer también
 
     gs.pit.hp--;
     if (gs.pit.hp <= 0) {
@@ -59,6 +65,7 @@ void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
 void CollisionSystem::damagePlayer(GameState& gs, int amount) {
     std::lock_guard<std::mutex> pl(gs.pitMutex);
     gs.pit.hp -= amount;
+    gs.pit.invincibleTicks = 15;  // ~1.5 segundos de invencibilidad
     if (gs.pit.hp <= 0) {
         gs.pit.lives--;
         gs.pit.hp = MAX_HP;

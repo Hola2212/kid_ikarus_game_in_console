@@ -50,6 +50,7 @@ struct Player {
     bool      crouching{false};
     bool      onGround{true};
     int       velY{0};           // velocidad vertical para gravedad/salto
+    int invincibleTicks{0};  // ticks de invencibilidad tras recibir daño
 };
 
 // ─── Estado global compartido ─────────────────────────────────────────────────
