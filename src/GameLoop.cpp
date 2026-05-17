@@ -1,5 +1,6 @@
 #include "GameLoop.h"
 #include "ScoreManager.h" 
+#include "CollisionSystem.h"
 
 #include <chrono>
 #include <thread>
@@ -48,27 +49,33 @@ void GameLoop::run() {
         // UPDATE (solo si está jugando)
         // =====================
         if (gs.status.load() == GameStatus::RUNNING) {
+            {
+                std::lock_guard<std::mutex> lock(gs.pitMutex);
 
-            std::lock_guard<std::mutex> lock(gs.pitMutex);
+                // Gravedad
+                if (!gs.pit.onGround) {
+                    gs.pit.velY += 1;
+                    gs.pit.pos.y += gs.pit.velY;
+                }
 
-            // Gravedad
-            if (!gs.pit.onGround) {
-                gs.pit.velY += 1;
-                gs.pit.pos.y += gs.pit.velY;
-            }
+                // Suelo
+                if (gs.pit.pos.y >= GAME_HEIGHT - 2) {
+                    gs.pit.pos.y = GAME_HEIGHT - 2; 
+                    gs.pit.velY = 0;
+                    gs.pit.onGround = true;
+                }
 
-            // Suelo
-            if (gs.pit.pos.y >= GAME_HEIGHT - 2) {
-                gs.pit.pos.y = GAME_HEIGHT - 2; 
-                gs.pit.velY = 0;
-                gs.pit.onGround = true;
-            }
+                // Límite superior
+                if (gs.pit.pos.y < 0) {
+                    gs.pit.pos.y = 0;
+                    gs.pit.velY = 0;
+                }
+            } // pitMutex liberado aquí
 
-            // Límite superior
-            if (gs.pit.pos.y < 0) {
-                gs.pit.pos.y = 0;
-                gs.pit.velY = 0;
-            }
+            // =====================
+            // COLISIONES
+            // =====================
+            CollisionSystem::checkAll(gs, *currentLevel_);
         }
 
         // =====================

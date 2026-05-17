@@ -42,13 +42,13 @@ void CollisionSystem::checkPitVsEnemies(GameState& gs) {
 void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
     std::lock_guard<std::mutex> pl(gs.pitMutex);
 
-    if (gs.pit.pos.y < SCREEN_HEIGHT) return;
+    if (gs.pit.pos.y < GAME_HEIGHT) return;
 
     // Reaparecer en posición inicial
     gs.pit.pos      = {SCREEN_WIDTH / 2, SCREEN_HEIGHT - 2};
     gs.pit.velY     = 0;
     gs.pit.onGround = true;
-    gs.pit.invincibleTicks = 15;  // invencibilidad al reaparecer también
+    gs.pit.invincibleTicks = 15;
 
     gs.pit.hp--;
     if (gs.pit.hp <= 0) {
