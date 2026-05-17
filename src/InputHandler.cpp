@@ -69,12 +69,21 @@ void InputHandler::processInput(GameState& gs) {
         GameStatus state = gs.status.load();
         // ───── MENU ─────
         if (state == GameStatus::MENU) {
-            if (key == '1') {
+            if (key == '1' || key == '2') {
                 gs.status.store(GameStatus::RUNNING);
             }
-            else if (key == '2') {
-                gs.status.store(GameStatus::RUNNING);
+            else if (key == 'i' || key == 'I') { 
+                gs.status.store(GameStatus::INSTRUCTIONS);
             }
+            else if (key == 's' || key == 'S') { 
+                gs.status.store(GameStatus::SCORES);
+            }
+            continue;
+        
+        // ───── INSTRUCCIONES / SCORES — cualquier tecla vuelve al menu ─────
+        if (state == GameStatus::INSTRUCTIONS || 
+            state == GameStatus::SCORES) {       
+            gs.status.store(GameStatus::MENU);
             continue;
         }
         // ───── SOLO EN JUEGO ─────
