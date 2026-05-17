@@ -8,6 +8,8 @@
 // ─── Enumeraciones ────────────────────────────────────────────────────────────
 enum class GameStatus {
     MENU,
+    INSTRUCTIONS,
+    SCORES,
     RUNNING,
     PAUSED,
     SHOP,       // Tienda entre fase 2 → fase 3
@@ -59,6 +61,7 @@ struct GameState {
     std::atomic<GameStatus> status{GameStatus::MENU};
     std::atomic<int>        phase{1};           // Fase actual (1-3)
     std::atomic<bool>       running{false};     // Game loop activo
+    std::atomic<int>        score{0};       // Puntuación del jugador
 
     // ── Jugador ───────────────────────────────────────────────────────────
     Player      pit;
