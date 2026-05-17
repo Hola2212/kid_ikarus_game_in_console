@@ -85,12 +85,12 @@ void GameLoop::run() {
                 
                 case GameStatus::INSTRUCTIONS: 
                     renderer.renderInstructions();
-                    gs.status.store(GameStatus::MENU);
+                    
                     break;
 
                 case GameStatus::SCORES: 
                     renderer.renderScores();
-                    gs.status.store(GameStatus::MENU);
+                    
                     break;
 
                 case GameStatus::RUNNING:
