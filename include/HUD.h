@@ -12,6 +12,7 @@ struct HUDData {
     int hp{MAX_HP};
     int hearts{0};
     int phase{1};
+    int score{0};
     GameStatus status{GameStatus::RUNNING};
 };
 
