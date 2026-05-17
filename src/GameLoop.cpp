@@ -1,4 +1,5 @@
 #include "GameLoop.h"
+#include "ScoreManager.h" 
 
 #include <chrono>
 #include <thread>
@@ -81,6 +82,16 @@ void GameLoop::run() {
                 case GameStatus::MENU:
                     renderer.renderMenu();
                     break;
+                
+                case GameStatus::INSTRUCTIONS: 
+                    renderer.renderInstructions();
+                    gs.status.store(GameStatus::MENU);
+                    break;
+
+                case GameStatus::SCORES: 
+                    renderer.renderScores();
+                    gs.status.store(GameStatus::MENU);
+                    break;
 
                 case GameStatus::RUNNING:
                     renderer.render(gs, *currentLevel_);
@@ -96,10 +107,20 @@ void GameLoop::run() {
 
                 case GameStatus::VICTORY:
                     renderer.renderVictory();
+                    
+                    if (ScoreManager::isHighScore(gs.score.load())) {
+                        std::string name = "JUGADOR";
+                        ScoreManager::save(name, gs.score.load(), gs.phase.load());
+                    }
                     break;
 
                 case GameStatus::GAME_OVER:
                     renderer.renderGameOver();
+                    
+                    if (ScoreManager::isHighScore(gs.score.load())) {
+                        std::string name = "JUGADOR";
+                        ScoreManager::save(name, gs.score.load(), gs.phase.load());
+                    }
                     break;
 
                 default:
@@ -111,6 +132,6 @@ void GameLoop::run() {
         // =====================
         // CONTROL DE TIEMPO
         // =====================
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        std::this_thread::sleep_for(std::chrono::milliseconds(GAME_LOOP_MS));
     }
 }
