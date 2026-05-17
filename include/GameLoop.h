@@ -4,6 +4,7 @@
 #include "InputHandler.h"
 #include "Renderer.h"
 #include "Level.h"
+#include "ScoreManager.h"
 
 #include <memory>
 
