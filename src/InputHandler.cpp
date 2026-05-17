@@ -79,6 +79,7 @@ void InputHandler::processInput(GameState& gs) {
                 gs.status.store(GameStatus::SCORES);
             }
             continue;
+        }
         
         // ───── INSTRUCCIONES / SCORES — cualquier tecla vuelve al menu ─────
         if (state == GameStatus::INSTRUCTIONS || 
