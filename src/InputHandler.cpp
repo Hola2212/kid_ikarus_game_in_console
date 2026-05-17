@@ -72,10 +72,10 @@ void InputHandler::processInput(GameState& gs) {
             if (key == '1' || key == '2') {
                 gs.status.store(GameStatus::RUNNING);
             }
-            else if (key == 'i' || key == 'I') { 
+            else if (key == 'i' || key == 'I') { // NUEVO
                 gs.status.store(GameStatus::INSTRUCTIONS);
             }
-            else if (key == 's' || key == 'S') { 
+            else if (key == 's' || key == 'S') { // NUEVO
                 gs.status.store(GameStatus::SCORES);
             }
             continue;
@@ -85,6 +85,17 @@ void InputHandler::processInput(GameState& gs) {
         if (state == GameStatus::INSTRUCTIONS || 
             state == GameStatus::SCORES) {       
             gs.status.store(GameStatus::MENU);
+            continue;
+        }
+        // ───── GAME OVER / VICTORY ─────
+        if (state == GameStatus::GAME_OVER || // NUEVO
+            state == GameStatus::VICTORY) {   // NUEVO
+            if (key == 'r' || key == 'R') {
+                gs.status.store(GameStatus::MENU);
+            }
+            else if (key == 'm' || key == 'M') {
+                gs.status.store(GameStatus::MENU);
+            }
             continue;
         }
         // ───── SOLO EN JUEGO ─────
