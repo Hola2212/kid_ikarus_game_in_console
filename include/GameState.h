@@ -44,7 +44,7 @@ struct Enemy {
 };
 
 struct Player {
-    Position  pos{SCREEN_WIDTH / 2, SCREEN_HEIGHT - 2};
+    Position  pos{SCREEN_WIDTH / 2, GAME_HEIGHT - 2};
     int       lives{MAX_LIVES};
     int       hp{MAX_HP};
     int       hearts{0};         // moneda

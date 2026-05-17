@@ -18,7 +18,7 @@ GameLoop::GameLoop() {
         std::lock_guard<std::mutex> lock(gs.pitMutex);
 
         gs.pit.pos.x = SCREEN_WIDTH / 2;
-        gs.pit.pos.y = SCREEN_HEIGHT - 2;
+        gs.pit.pos.y = GAME_HEIGHT - 2;
 
         gs.pit.velY = 0;
 
@@ -58,8 +58,8 @@ void GameLoop::run() {
             }
 
             // Suelo
-            if (gs.pit.pos.y >= SCREEN_HEIGHT - 2) {
-                gs.pit.pos.y = SCREEN_HEIGHT - 2;
+            if (gs.pit.pos.y >= GAME_HEIGHT - 2) {
+                gs.pit.pos.y = GAME_HEIGHT - 2; 
                 gs.pit.velY = 0;
                 gs.pit.onGround = true;
             }
