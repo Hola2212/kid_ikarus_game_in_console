@@ -1,8 +1,11 @@
 #pragma once
 
 // ─── Dimensiones de la pantalla ───────────────────────────────────────────────
-constexpr int SCREEN_WIDTH  = 40;
+constexpr int SCREEN_WIDTH  = 80;
 constexpr int SCREEN_HEIGHT = 24;
+constexpr int HUD_ROWS       = 3;
+constexpr int GAME_ROW_START = HUD_ROWS + 1;
+constexpr int GAME_HEIGHT    = SCREEN_HEIGHT - GAME_ROW_START;
 
 // ─── Lógica de juego ──────────────────────────────────────────────────────────
 constexpr int MAX_LIVES         = 3;
@@ -12,6 +15,7 @@ constexpr int MAX_ENEMY_PROJ    = 3;
 constexpr int TOTAL_PHASES      = 3;    // Fases dentro del único nivel
 constexpr int SHOP_HEART_COST   = 3;    // Corazones para comprar 1 HP
 constexpr int SHOP_HP_GAIN      = 1;    // HP que da la tienda
+constexpr int MAX_SCORES      = 5;
 
 // ─── Velocidades (ms entre ticks) ─────────────────────────────────────────────
 constexpr int GAME_LOOP_MS      = 100;  // ~10 FPS base
