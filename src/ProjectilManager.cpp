@@ -99,7 +99,7 @@ void ProjectileManager::tickPlayer(GameState& gs, const Level& level) {
 
         // ¿Fuera de pantalla?
         bool outOfBounds = (p.pos.x < 0 || p.pos.x >= SCREEN_WIDTH ||
-                            p.pos.y < 0 || p.pos.y >= SCREEN_HEIGHT);
+                            p.pos.y < 0 || p.pos.y >= GAME_HEIGHT);
 
         // ¿Golpea plataforma?
         bool hitPlat = hitsPlatform(p, level.getPlatforms());
@@ -152,7 +152,7 @@ void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
         }
 
         bool outOfBounds = (p.pos.x < 0 || p.pos.x >= SCREEN_WIDTH ||
-                            p.pos.y < 0 || p.pos.y >= SCREEN_HEIGHT);
+                            p.pos.y < 0 || p.pos.y >= GAME_HEIGHT);
         bool hitPlat = hitsPlatform(p, level.getPlatforms());
         bool hitPit  = hitsPlayer(p, pitSnap) && !pitSnap.crouching;
 

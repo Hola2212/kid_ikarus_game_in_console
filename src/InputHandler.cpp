@@ -253,7 +253,7 @@ void InputHandler::processInput(GameState& gs) {
 
                 if (gs.pit.onGround) {
 
-                    gs.pit.velY = -3;
+                    gs.pit.velY = -4;
 
                     gs.pit.onGround = false;
                 }
@@ -270,7 +270,19 @@ void InputHandler::processInput(GameState& gs) {
 
                 std::lock_guard<std::mutex> lock(gs.pitMutex);
 
-                gs.pit.crouching = true;
+                // =========================================
+                // Activar caída a través de plataforma
+                // =========================================
+
+                if (gs.pit.onGround) {
+
+                    gs.pit.dropThroughTicks = 8;
+
+                    gs.pit.onGround = false;
+
+                    // Empujar ligeramente hacia abajo
+                    gs.pit.pos.y += 1;
+                }
 
                 break;
             }

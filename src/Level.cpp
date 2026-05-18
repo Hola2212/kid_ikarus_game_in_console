@@ -45,14 +45,14 @@ void Level::buildPhase1() {
         // suelo
         {0, GAME_HEIGHT - 1, SCREEN_WIDTH},
 
-        {3,  16, 8},
-        {12, 13, 7},
-        {22, 10, 9},
-        {5,  7,  6},
-        {16, 4,  8},
+        {3,  16, 10},
+        {11, 13, 10},
+        {20, 10, 10},
+        {8,  7,  10},
+        {15, 4,  10},
 
         // techo/meta
-        {2, 1, SCREEN_WIDTH - 4}
+        {23, 2, SCREEN_WIDTH - 8}
     };
 }
 

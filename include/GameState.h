@@ -50,6 +50,7 @@ struct Player {
     int       hearts{0};         // moneda
     Direction facing{Direction::RIGHT};
     bool      crouching{false};
+    int dropThroughTicks = 0;
     bool      onGround{true};
     int       velY{0};           // velocidad vertical para gravedad/salto
     int invincibleTicks{0};  // ticks de invencibilidad tras recibir daño
