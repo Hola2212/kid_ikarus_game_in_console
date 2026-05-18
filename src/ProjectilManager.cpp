@@ -37,8 +37,25 @@ bool ProjectileManager::firePlayerProjectile(GameState& gs, Direction dir) {
                 std::lock_guard<std::mutex> pl(gs.pitMutex);
                 snapPit = gs.pit;
             }
-            gs.playerProjs[i].pos    = snapPit.pos;
-            gs.playerProjs[i].dir    = (dir == Direction::NONE) ? snapPit.facing : dir;
+            Direction finalDir = (dir == Direction::NONE)? snapPit.facing: dir;
+            // Posición inicial
+            Position start = snapPit.pos;
+            // Hacer que el disparo salga DELANTE de Pit
+            switch (finalDir) {
+                case Direction::RIGHT:
+                    start.x += 1;
+                    break;
+                case Direction::LEFT:
+                    start.x -= 1;
+                    break;
+                case Direction::UP:
+                    start.y -= 1;
+                    break;
+                default:
+                    break;
+            }
+            gs.playerProjs[i].pos    = start;
+            gs.playerProjs[i].dir    = finalDir;
             gs.playerProjs[i].active = true;
             return true;
         }
