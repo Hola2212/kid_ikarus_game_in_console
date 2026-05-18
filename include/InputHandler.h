@@ -1,27 +1,23 @@
-#ifndef INPUTHANDLER_H
-#define INPUTHANDLER_H
+#pragma once
+
+#include <termios.h>
+#include <unistd.h>
+#include <sys/select.h>
 
 #include "GameState.h"
 
-// Linux / WSL
-#include <termios.h>
-#include <unistd.h>
-
 class InputHandler {
+private:
+    struct termios originalTermios;
+
+    void enableRawMode();
+    void disableRawMode();
+
 public:
     InputHandler();
     ~InputHandler();
 
-    // Función principal
-    void processInput(GameState& gs);
-
-private:
-    void enableRawMode();
-    void disableRawMode();
-
     int readKey();
 
-    struct termios originalTermios;
+    void processInput(GameState& gs);
 };
-
-#endif

@@ -12,23 +12,28 @@
  * GameLoop
  * --------
  * Controla el flujo principal del juego.
- *
- * Usa GameStatus para decidir qué renderizar:
- *  MENU, RUNNING, PAUSED, etc.
  */
 
 class GameLoop {
+
 private:
+
+    // Control principal del loop
     bool running;
 
+    // Estado global
     GameState gs;
 
+    // Sistemas
     InputHandler input;
     Renderer renderer;
 
+    // Nivel actual
     std::unique_ptr<Level> currentLevel_;
 
 public:
+
     GameLoop();
+
     void run();
 };
