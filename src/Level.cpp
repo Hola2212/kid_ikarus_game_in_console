@@ -2,101 +2,219 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 Level::Level(int phase) : phase_(phase) {
+
     switch (phase_) {
-        case 1: buildPhase1(); break;
-        case 2: buildPhase2(); break;
-        case 3: buildPhase3(); break;
-        default: buildPhase1(); break;
+
+        case 1:
+
+            buildPhase1();
+
+            break;
+
+        case 2:
+
+            buildPhase2();
+
+            break;
+
+        case 3:
+
+            buildPhase3();
+
+            break;
+
+        default:
+
+            buildPhase1();
+
+            break;
     }
 }
 
-// ─── Fase 1 — 3 Monoeye ───────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// FASE 1
+// ─────────────────────────────────────────────────────────────────────────────
+
 void Level::buildPhase1() {
-    // Plataformas: {x_inicio, y, longitud}
-    platforms_ = {
-        {0,  SCREEN_HEIGHT - 1, SCREEN_WIDTH},  // suelo
-        {3,  18, 8},
-        {12, 15, 7},
-        {22, 12, 9},
-        {5,  9,  6},
-        {16, 6,  8},
-        {2,  3,  SCREEN_WIDTH - 4}              // techo / meta fase
-    };
-}
 
-// ─── Fase 2 — 4 Monoeye + 2 Shemum ───────────────────────────────────────────
-void Level::buildPhase2() {
-    platforms_ = {
-        {0,  SCREEN_HEIGHT - 1, SCREEN_WIDTH},
-        {5,  17, 6},
-        {14, 14, 5},
-        {2,  11, 7},
-        {18, 8,  8},
-        {6,  5,  10},
-        {1,  2,  SCREEN_WIDTH - 2}
-    };
-}
+    // Coordenadas RELATIVAS al área de juego
+    // {x_inicio, y, longitud}
 
-// ─── Fase 3 — 5 Monoeye + 3 Shemum + 1-2 Reaper ─────────────────────────────
-void Level::buildPhase3() {
     platforms_ = {
-        {0,  SCREEN_HEIGHT - 1, SCREEN_WIDTH},
-        {4,  16, 5},
-        {13, 13, 6},
-        {1,  10, 8},
-        {20, 7,  7},
-        {8,  4,  9},
-        {0,  1,  SCREEN_WIDTH}                  // arena de Medusa
+
+        // suelo
+        {0, GAME_HEIGHT - 1, SCREEN_WIDTH},
+
+        {3,  16, 8},
+        {12, 13, 7},
+        {22, 10, 9},
+        {5,  7,  6},
+        {16, 4,  8},
+
+        // techo/meta
+        {2, 1, SCREEN_WIDTH - 4}
     };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FASE 2
+// ─────────────────────────────────────────────────────────────────────────────
+
+void Level::buildPhase2() {
+
+    platforms_ = {
+
+        {0, GAME_HEIGHT - 1, SCREEN_WIDTH},
+
+        {5,  15, 6},
+        {14, 12, 5},
+        {2,  9,  7},
+        {18, 6,  8},
+        {6,  3,  10},
+
+        {1, 1, SCREEN_WIDTH - 2}
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FASE 3
+// ─────────────────────────────────────────────────────────────────────────────
+
+void Level::buildPhase3() {
+
+    platforms_ = {
+
+        {0, GAME_HEIGHT - 1, SCREEN_WIDTH},
+
+        {4,  14, 5},
+        {13, 11, 6},
+        {1,  8,  8},
+        {20, 5,  7},
+        {8,  2,  9},
+
+        // arena Medusa
+        {0, 1, SCREEN_WIDTH}
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPAWN ENEMIGOS
+// ─────────────────────────────────────────────────────────────────────────────
+
 std::vector<Enemy> Level::spawnEnemies() const {
+
     std::vector<Enemy> enemies;
 
-    auto addEnemy = [&](EnemyType t, int x, int y, int hp = 1, int hearts = 1) {
-        Enemy e;
-        e.type          = t;
-        e.pos           = {x, y};
-        e.hp            = hp;
-        e.alive         = true;
-        e.heartsOnDeath = hearts;
-        enemies.push_back(e);
-    };
+    auto addEnemy =
+        [&](EnemyType t, int x, int y, int hp = 1, int hearts = 1) {
+
+            Enemy e;
+
+            e.type          = t;
+
+            e.pos           = {x, y};
+
+            e.hp            = hp;
+
+            e.alive         = true;
+
+            e.heartsOnDeath = hearts;
+
+            e.dir           = Direction::RIGHT;
+
+            enemies.push_back(e);
+        };
+
+    // ─────────────────────────
+    // FASE 1
+    // ─────────────────────────
 
     if (phase_ >= 1) {
-        // Monoeye fase 1: 3 unidades
-        addEnemy(EnemyType::MONOEYE, 5,  16);
-        addEnemy(EnemyType::MONOEYE, 20, 13);
-        addEnemy(EnemyType::MONOEYE, 10, 8);
+
+        addEnemy(EnemyType::MONOEYE, 5,  14);
+
+        addEnemy(EnemyType::MONOEYE, 20, 11);
+
+        addEnemy(EnemyType::MONOEYE, 10, 6);
     }
+
+    // ─────────────────────────
+    // FASE 2
+    // ─────────────────────────
+
     if (phase_ >= 2) {
-        // Monoeye adicionales
-        addEnemy(EnemyType::MONOEYE, 30, 10);
-        // Shemum fase 2: 2 unidades
-        addEnemy(EnemyType::SHEMUM, 8,  SCREEN_HEIGHT - 2);
-        addEnemy(EnemyType::SHEMUM, 22, SCREEN_HEIGHT - 2);
+
+        addEnemy(EnemyType::MONOEYE, 30, 8);
+
+        addEnemy(
+            EnemyType::SHEMUM,
+            8,
+            GAME_HEIGHT - 2
+        );
+
+        addEnemy(
+            EnemyType::SHEMUM,
+            22,
+            GAME_HEIGHT - 2
+        );
     }
+
+    // ─────────────────────────
+    // FASE 3
+    // ─────────────────────────
+
     if (phase_ >= 3) {
-        // Monoeye adicional
-        addEnemy(EnemyType::MONOEYE, 15, 5);
-        // Shemum adicional
-        addEnemy(EnemyType::SHEMUM, 12, SCREEN_HEIGHT - 2);
-        // Reaper fase 3: 2 unidades
-        addEnemy(EnemyType::REAPER, 6,  SCREEN_HEIGHT - 2, 3, 2);
-        addEnemy(EnemyType::REAPER, 28, SCREEN_HEIGHT - 2, 3, 2);
+
+        addEnemy(EnemyType::MONOEYE, 15, 3);
+
+        addEnemy(
+            EnemyType::SHEMUM,
+            12,
+            GAME_HEIGHT - 2
+        );
+
+        addEnemy(
+            EnemyType::REAPER,
+            6,
+            GAME_HEIGHT - 2,
+            3,
+            2
+        );
+
+        addEnemy(
+            EnemyType::REAPER,
+            28,
+            GAME_HEIGHT - 2,
+            3,
+            2
+        );
     }
 
     return enemies;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MEDUSA
+// ─────────────────────────────────────────────────────────────────────────────
+
 Enemy Level::spawnMedusa() const {
+
     Enemy medusa;
-    medusa.type          = EnemyType::MEDUSA;
-    medusa.pos           = {SCREEN_WIDTH / 2, 2};
-    medusa.hp            = 10;
-    medusa.alive         = true;
+
+    medusa.type = EnemyType::MEDUSA;
+
+    medusa.pos = {
+        SCREEN_WIDTH / 2,
+        2
+    };
+
+    medusa.hp = 10;
+
+    medusa.alive = true;
+
     medusa.heartsOnDeath = 0;
+
+    medusa.dir = Direction::LEFT;
+
     return medusa;
 }
