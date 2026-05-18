@@ -177,10 +177,49 @@ void InputHandler::processInput(GameState& gs) {
 
                     gs.pit.hp = MAX_HP;
                     gs.pit.lives = MAX_LIVES;
+                    gs.pit.hearts = 0;
 
                     gs.pit.velY = 0;
 
                     gs.pit.onGround = true;
+                    gs.pit.crouching = false;
+
+                    gs.pit.facing = Direction::RIGHT;
+                }
+
+                // =========================================
+                // RESETEAR ENEMIGOS
+                // =========================================
+
+                {
+                    std::lock_guard<std::mutex> lock(gs.enemyMutex);
+
+                    for (auto& e : gs.enemies) {
+
+                        e.alive = false;
+                    }
+                }
+
+                // =========================================
+                // LIMPIAR PROYECTILES
+                // =========================================
+
+                {
+                    std::lock_guard<std::mutex> lock(gs.playerProjMutex);
+
+                    for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
+
+                        gs.playerProjs[i].active = false;
+                    }
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(gs.enemyProjMutex);
+
+                    for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
+
+                        gs.enemyProjs[i].active = false;
+                    }
                 }
 
                 gs.status.store(GameStatus::RUNNING);

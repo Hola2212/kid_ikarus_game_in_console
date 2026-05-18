@@ -6,7 +6,12 @@
 #include "Level.h"
 #include "ScoreManager.h"
 
+#include "EnemyManager.h"
+#include "Physics.h"
+#include "ProjectileManager.h"
+
 #include <memory>
+#include <thread>
 
 /*
  * GameLoop
@@ -31,9 +36,26 @@ private:
     // Nivel actual
     std::unique_ptr<Level> currentLevel_;
 
+    // ============================
+    // THREADS DEL JUEGO
+    // ============================
+
+    std::thread enemyThread_;
+    std::thread physicsThread_;
+    std::thread projPitThread_;
+    std::thread projEnemyThread_;
+
+    // ============================
+    // HELPERS
+    // ============================
+
+    void resetGame();
+
 public:
 
     GameLoop();
+
+    ~GameLoop();
 
     void run();
 };

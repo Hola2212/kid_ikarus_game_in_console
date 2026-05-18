@@ -1,4 +1,5 @@
 #include "GameLoop.h"
+
 #include "ScoreManager.h"
 #include "CollisionSystem.h"
 
@@ -11,6 +12,12 @@ GameLoop::GameLoop() {
 
     currentLevel_ = std::make_unique<Level>(1);
 
+    // =========================================
+    // SPAWN INICIAL DE ENEMIGOS
+    // =========================================
+
+    gs.enemies = currentLevel_->spawnEnemies();
+
     {
         std::lock_guard<std::mutex> lock(gs.pitMutex);
 
@@ -21,12 +28,151 @@ GameLoop::GameLoop() {
 
         gs.pit.hp = MAX_HP;
         gs.pit.lives = MAX_LIVES;
+        gs.pit.hearts = 0;
 
         gs.pit.onGround = true;
+        gs.pit.crouching = false;
+
+        gs.pit.facing = Direction::RIGHT;
     }
 
+    gs.score.store(0);
+
+    gs.phase.store(1);
+
     gs.running.store(true);
+
     gs.status.store(GameStatus::MENU);
+
+    // =========================================
+    // LANZAR THREADS
+    // =========================================
+
+    enemyThread_ = std::thread(
+        EnemyManager::threadFunc,
+        &gs,
+        currentLevel_.get()
+    );
+
+    physicsThread_ = std::thread(
+        Physics::threadFunc,
+        &gs,
+        currentLevel_.get()
+    );
+
+    projPitThread_ = std::thread(
+        ProjectileManager::playerProjThread,
+        &gs,
+        currentLevel_.get()
+    );
+
+    projEnemyThread_ = std::thread(
+        ProjectileManager::enemyProjThread,
+        &gs,
+        currentLevel_.get()
+    );
+}
+
+GameLoop::~GameLoop() {
+
+    // =========================================
+    // DETENER THREADS
+    // =========================================
+
+    gs.running.store(false);
+
+    // =========================================
+    // JOIN THREADS
+    // =========================================
+
+    if (enemyThread_.joinable())
+        enemyThread_.join();
+
+    if (physicsThread_.joinable())
+        physicsThread_.join();
+
+    if (projPitThread_.joinable())
+        projPitThread_.join();
+
+    if (projEnemyThread_.joinable())
+        projEnemyThread_.join();
+}
+
+// =====================================================
+// RESET COMPLETO DEL JUEGO
+// =====================================================
+
+void GameLoop::resetGame() {
+
+    // =========================================
+    // RESET PLAYER
+    // =========================================
+
+    {
+        std::lock_guard<std::mutex> lock(gs.pitMutex);
+
+        gs.pit.pos.x = SCREEN_WIDTH / 2;
+        gs.pit.pos.y = GAME_HEIGHT - 2;
+
+        gs.pit.velY = 0;
+
+        gs.pit.hp = MAX_HP;
+        gs.pit.lives = MAX_LIVES;
+        gs.pit.hearts = 0;
+
+        gs.pit.onGround = true;
+        gs.pit.crouching = false;
+
+        gs.pit.facing = Direction::RIGHT;
+    }
+
+    // =========================================
+    // RESET SCORE / PHASE
+    // =========================================
+
+    gs.score.store(0);
+
+    gs.phase.store(1);
+
+    // =========================================
+    // LIMPIAR ENEMIGOS
+    // =========================================
+
+    {
+        std::lock_guard<std::mutex> lock(gs.enemyMutex);
+
+        gs.enemies.clear();
+
+        gs.enemies = currentLevel_->spawnEnemies();
+    }
+
+    // =========================================
+    // LIMPIAR PROYECTILES JUGADOR
+    // =========================================
+
+    {
+        std::lock_guard<std::mutex> lock(gs.playerProjMutex);
+
+        for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
+
+            gs.playerProjs[i].active = false;
+        }
+    }
+
+    // =========================================
+    // LIMPIAR PROYECTILES ENEMIGOS
+    // =========================================
+
+    {
+        std::lock_guard<std::mutex> lock(gs.enemyProjMutex);
+
+        for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
+
+            gs.enemyProjs[i].active = false;
+        }
+    }
+
+    gs.status.store(GameStatus::RUNNING);
 }
 
 void GameLoop::run() {
@@ -41,39 +187,28 @@ void GameLoop::run() {
 
         input.processInput(gs);
 
+        // =========================================
+        // RESTART COMPLETO
+        // =========================================
+
+        if (gs.status.load() == GameStatus::RUNNING &&
+            gs.pit.lives == MAX_LIVES &&
+            gs.score.load() == 0) {
+
+            // Nada especial aquí,
+            // reset se hace desde InputHandler
+        }
+
         // =====================
         // UPDATE
         // =====================
 
         if (gs.status.load() == GameStatus::RUNNING) {
 
-            {
-                std::lock_guard<std::mutex> lock(gs.pitMutex);
-
-                // gravedad
-                if (!gs.pit.onGround) {
-                    gs.pit.velY += 1;
-                    gs.pit.pos.y += gs.pit.velY;
-                }
-
-                // suelo
-                if (gs.pit.pos.y >= GAME_HEIGHT - 2) {
-
-                    gs.pit.pos.y = GAME_HEIGHT - 2;
-
-                    gs.pit.velY = 0;
-
-                    gs.pit.onGround = true;
-                }
-
-                // techo
-                if (gs.pit.pos.y < 0) {
-
-                    gs.pit.pos.y = 0;
-
-                    gs.pit.velY = 0;
-                }
-            }
+            // =========================================
+            // SOLO COLISIONES
+            // Física corre en Physics thread
+            // =========================================
 
             CollisionSystem::checkAll(gs, *currentLevel_);
         }
@@ -92,7 +227,9 @@ void GameLoop::run() {
                 case GameStatus::MENU:
 
                     if (lastRendered != GameStatus::MENU) {
+
                         renderer.renderMenu();
+
                         lastRendered = GameStatus::MENU;
                     }
 
@@ -101,7 +238,9 @@ void GameLoop::run() {
                 case GameStatus::INSTRUCTIONS:
 
                     if (lastRendered != GameStatus::INSTRUCTIONS) {
+
                         renderer.renderInstructions();
+
                         lastRendered = GameStatus::INSTRUCTIONS;
                     }
 
@@ -110,7 +249,9 @@ void GameLoop::run() {
                 case GameStatus::SCORES:
 
                     if (lastRendered != GameStatus::SCORES) {
+
                         renderer.renderScores();
+
                         lastRendered = GameStatus::SCORES;
                     }
 
