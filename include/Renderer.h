@@ -2,6 +2,16 @@
 #include "GameState.h"
 #include "Level.h"
 
+enum class SpriteFrame {
+    IDLE = 0,
+    WALK1,
+    WALK2,
+    JUMP,
+    DAMAGE,
+    VICTORY,
+    FRAME_COUNT
+};
+
 class Renderer {
 public:
     Renderer();
@@ -18,11 +28,23 @@ private:
     char back_[SCREEN_HEIGHT][SCREEN_WIDTH + 1];
     char front_[SCREEN_HEIGHT][SCREEN_WIDTH + 1];
     int  frame_{0};
-    bool first_{true};
+    
+    int  prevPitX_{-1};
+    int  prevPitY_{-1};
+    bool pitMoving_{false};
 
     void clear();
     void put(int x, int y, char c);
     void putStr(int x, int y, const char* s);
     void flush();
     void drawHUD(const GameState& gs);
+    
+    void drawBackground(int phase, GameStatus status);
+    void drawPitSprite(int x, int y, SpriteFrame f, bool facingLeft);
+    void drawEnemySprite(int x, int y, EnemyType type, Direction dir);
+    SpriteFrame getPlayerFrame(const Player& pit) const;
+
+    
+    static const char* const PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUNT)][4];
+    static const char* const ENEMY_SPRITES[5][3];
 };
