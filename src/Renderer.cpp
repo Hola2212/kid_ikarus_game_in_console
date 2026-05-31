@@ -45,6 +45,12 @@ Renderer::Renderer() {
 }
 
 void Renderer::render(const GameState& gs, const Level& level) {
+    // No dibujar si no estamos en gameplay activo
+    GameStatus st = gs.status.load();
+    if (st != GameStatus::RUNNING && st != GameStatus::BOSS &&
+        st != GameStatus::PAUSED)
+        return;
+
     ++frame_;
     clear();
 
