@@ -529,13 +529,13 @@ void Renderer::renderPause(const GameState& gs) {
     mv(10, 9);
     printf(COL_CYAN "╠══════════════════════════════════════════════════╣" COL_RESET);
     mv(10,10);
-    printf(COL_CYAN "║  Vidas  %c%c%c     Score  %05d     Fase  %d      ║" COL_RESET,
+    printf(COL_CYAN "║  Vidas  %c%c%c     Score  %05d     Fase  %d         ║" COL_RESET,
            h.lives>0?'*':'.', h.lives>1?'*':'.', h.lives>2?'*':'.',
            h.score, h.phase);
     mv(10,11);
     printf(COL_CYAN "║  HP  [");
     for (int i = 0; i < MAX_HP; ++i) printf("%c", i < h.hp ? '#' : '-');
-    printf("]   ♦ %02d corazones           ║" COL_RESET, h.hearts);
+    printf("]   ♦ %02d corazones               ║" COL_RESET, h.hearts);
     mv(10,12);
     printf(COL_CYAN "╠══════════════════════════════════════════════════╣" COL_RESET);
     mv(10,13);
