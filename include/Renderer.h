@@ -34,6 +34,8 @@ private:
     // Para detección de IDLE sin tocar lógica
     int  prevPitX_{-1};
     int  prevPitY_{-1};
+    int prevDrawPitX_{-100};
+    int prevDrawPitY_{-100};
     bool pitMoving_{false};
     // Para detectar transición PAUSED → RUNNING y limpiar overlay
     GameStatus prevStatus_{GameStatus::MENU};

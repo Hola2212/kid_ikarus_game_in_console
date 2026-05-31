@@ -186,20 +186,70 @@ void Renderer::drawBackground(int phase, GameStatus status) {
 
 
 void Renderer::drawPitSprite(int x, int y, SpriteFrame f, bool facingLeft) {
+
     int fi = static_cast<int>(f);
+
     if (facingLeft) {
-        if (f == SpriteFrame::WALK1) fi = static_cast<int>(SpriteFrame::WALK2);
-        else if (f == SpriteFrame::WALK2) fi = static_cast<int>(SpriteFrame::WALK1);
+        if (f == SpriteFrame::WALK1)
+            fi = static_cast<int>(SpriteFrame::WALK2);
+        else if (f == SpriteFrame::WALK2)
+            fi = static_cast<int>(SpriteFrame::WALK1);
     }
+
     int drawX = x - 2;
     int drawY = y - 3;
-    if (drawX + 5 > SCREEN_WIDTH) drawX = SCREEN_WIDTH - 5;
-    if (drawX < 0)                drawX = 0;
+
+    if (drawX + 5 > SCREEN_WIDTH)
+        drawX = SCREEN_WIDTH - 5;
+
+    if (drawX < 0)
+        drawX = 0;
+
+    // -------------------------------------------------
+    // BORRAR SPRITE ANTERIOR
+    // -------------------------------------------------
+
+    if (prevDrawPitX_ > -50) {
+
+        for (int row = 0; row < 4; ++row) {
+
+            int oldRow = prevDrawPitY_ + row;
+
+            if (oldRow < GAME_ROW_START)
+                continue;
+
+            if (oldRow >= SCREEN_HEIGHT)
+                break;
+
+            mv(prevDrawPitX_ + 1, oldRow + 1);
+
+            printf("     ");
+        }
+    }
+
+    // -------------------------------------------------
+    // GUARDAR POSICIÓN ACTUAL
+    // -------------------------------------------------
+
+    prevDrawPitX_ = drawX;
+    prevDrawPitY_ = drawY;
+
+    // -------------------------------------------------
+    // DIBUJAR SPRITE NUEVO
+    // -------------------------------------------------
+
     for (int row = 0; row < 4; ++row) {
+
         int absRow = drawY + row;
-        if (absRow < GAME_ROW_START) continue;
-        if (absRow >= SCREEN_HEIGHT) break;
+
+        if (absRow < GAME_ROW_START)
+            continue;
+
+        if (absRow >= SCREEN_HEIGHT)
+            break;
+
         mv(drawX + 1, absRow + 1);
+
         printf("%s", PIT_SPRITES[fi][row]);
     }
 }
