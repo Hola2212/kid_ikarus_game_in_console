@@ -29,6 +29,7 @@ private:
     char back_[SCREEN_HEIGHT][SCREEN_WIDTH + 1];
     char front_[SCREEN_HEIGHT][SCREEN_WIDTH + 1];
     int  frame_{0};
+    bool fullRedraw_{true};
 
     // Para detección de IDLE sin tocar lógica
     int  prevPitX_{-1};

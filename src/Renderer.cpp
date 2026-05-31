@@ -57,21 +57,28 @@ void Renderer::render(const GameState& gs, const Level& level) {
 
     ++frame_;
 
-    // PRUEBA TEMPORAL
+if (fullRedraw_) {
+
     cls();
 
-    if (prevStatus_ == GameStatus::PAUSED &&
-        st != GameStatus::PAUSED) {
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
 
-        cls();
+    fullRedraw_ = false;
+}
 
-        memset(front_, ' ', sizeof(front_));
-        memset(back_,  ' ', sizeof(back_));
-    }
+if (prevStatus_ == GameStatus::PAUSED &&
+    st != GameStatus::PAUSED) {
 
-    prevStatus_ = st;
+    cls();
 
-    clear();
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
+}
+
+prevStatus_ = st;
+
+clear();
 
 
     // Detectar movimiento real de Pit para elegir IDLE vs WALK
@@ -319,6 +326,8 @@ void Renderer::renderMenu() {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
+
+    fullRedraw_ = true;
 }
 
 
@@ -351,7 +360,10 @@ void Renderer::renderInstructions() {
     printf("╚════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
+    
+    fullRedraw_ = true;
 }
+
 
 
 void Renderer::renderScores() {
@@ -397,7 +409,10 @@ void Renderer::renderScores() {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
+    
+    fullRedraw_ = true;
 }
+
 
 
 void Renderer::renderShop(const GameState& gs) {
@@ -428,7 +443,10 @@ void Renderer::renderShop(const GameState& gs) {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
+    
+    fullRedraw_ = true;
 }
+
 
 
 void Renderer::renderPause(const GameState& gs) {
@@ -493,7 +511,10 @@ void Renderer::renderGameOver() {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
+    
+    fullRedraw_ = true;
 }
+
 
 
 void Renderer::renderVictory() {
@@ -538,7 +559,10 @@ void Renderer::renderVictory() {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
+    
+    fullRedraw_ = true;
 }
+
 
 
 void Renderer::clear() {
