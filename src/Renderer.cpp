@@ -98,26 +98,27 @@ void Renderer::render(const GameState& gs, const Level& level) {
         fullRedraw_ = true;
     prevStatus_ = st;
 
-    // fullRedraw_: redibujar todo desde cero
+    // fullRedraw_: cls() + fondo + reset tracking
     if (fullRedraw_) {
         cls();
         drawBackground(gs.phase.load(), st);
-        // Plataformas — string de '=' por plataforma, directo
-        for (auto& p : level.getPlatforms()) {
-            int drawY = p.y + GAME_ROW_START;
-            if (drawY < GAME_ROW_START || drawY >= SCREEN_HEIGHT) continue;
-            int x0 = p.x;
-            int x1 = std::min(p.x + p.length, SCREEN_WIDTH);
-            if (x0 >= x1) continue;
-            mv(x0 + 1, drawY + 1);
-            for (int i = x0; i < x1; ++i) printf("=");
-        }
         // Resetear tracking para que todo se redibuje
         prevDrawPitX_ = -99;
         for (int i = 0; i < MAX_TRACKED_ENEMIES; ++i) prevEnemyActive_[i] = false;
         for (int i = 0; i < MAX_PLAYER_PROJ;     ++i) prevProjActive_[i]  = false;
         for (int i = 0; i < MAX_ENEMY_PROJ;      ++i) prevEProjActive_[i] = false;
         fullRedraw_ = false;
+    }
+
+    // Plataformas — se redibujan cada frame porque los sprites las sobreescriben
+    for (auto& p : level.getPlatforms()) {
+        int drawY = p.y + GAME_ROW_START;
+        if (drawY < GAME_ROW_START || drawY >= SCREEN_HEIGHT) continue;
+        int x0 = p.x;
+        int x1 = std::min(p.x + p.length, SCREEN_WIDTH);
+        if (x0 >= x1) continue;
+        mv(x0 + 1, drawY + 1);
+        for (int i = x0; i < x1; ++i) printf("=");
     }
 
     // ── Detectar movimiento de Pit ────────────────────────────────────────────
