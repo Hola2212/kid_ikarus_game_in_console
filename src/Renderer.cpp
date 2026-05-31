@@ -516,7 +516,9 @@ void Renderer::renderShop(const GameState& gs) {
 }
 
 // No llama cls() — campo de juego visible detrás del overlay
+// Actualiza prevStatus_ para que render() detecte la transición PAUSED→RUNNING
 void Renderer::renderPause(const GameState& gs) {
+    prevStatus_ = GameStatus::PAUSED;
     HUDData h = HUD::getSnapshot();
     mv(10, 7);
     printf(COL_CYAN COL_BOLD "╔══════════════════════════════════════════════════╗" COL_RESET);
