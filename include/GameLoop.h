@@ -9,6 +9,7 @@
 #include "EnemyManager.h"
 #include "Physics.h"
 #include "ProjectileManager.h"
+#include "HUD.h"
 
 #include <memory>
 #include <thread>
@@ -44,6 +45,7 @@ private:
     std::thread physicsThread_;
     std::thread projPitThread_;
     std::thread projEnemyThread_;
+    std::thread hudThread_;
 
     // ============================
     // HELPERS

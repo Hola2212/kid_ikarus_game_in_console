@@ -71,6 +71,11 @@ GameLoop::GameLoop() {
         &gs,
         currentLevel_.get()
     );
+
+    hudThread_ = std::thread(
+        HUD::threadFunc,
+        &gs
+    );
 }
 
 GameLoop::~GameLoop() {
@@ -96,6 +101,9 @@ GameLoop::~GameLoop() {
 
     if (projEnemyThread_.joinable())
         projEnemyThread_.join();
+
+    if (hudThread_.joinable())
+        hudThread_.join();
 }
 
 // =====================================================

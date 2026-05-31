@@ -65,18 +65,17 @@ void EnemyManager::tick(
                     gs.phase.load()
                 );
 
-                // Disparo ocasional
+                // Disparo horizontal hacia el lado del jugador
                 if (gTick % 15 == 0) {
 
-                    Direction d =
-                        (pitSnapshot.pos.x < e.pos.x)
-                        ? Direction::LEFT
-                        : Direction::RIGHT;
+                    int dx = pitSnapshot.pos.x - e.pos.x;
+                    int velX = (dx >= 0) ? 1 : -1;
 
                     ProjectileManager::fireEnemyProjectile(
                         gs,
                         e.pos,
-                        d
+                        velX,
+                        0
                     );
                 }
 
@@ -135,15 +134,11 @@ void EnemyManager::tick(
                 if (gTick % 8 == 0) {
 
                     ProjectileManager::fireEnemyProjectile(
-                        gs,
-                        e.pos,
-                        Direction::LEFT
+                        gs, e.pos, -1, 0
                     );
 
                     ProjectileManager::fireEnemyProjectile(
-                        gs,
-                        e.pos,
-                        Direction::RIGHT
+                        gs, e.pos,  1, 0
                     );
                 }
 

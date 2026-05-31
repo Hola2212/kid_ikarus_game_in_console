@@ -19,7 +19,7 @@ public:
     static bool firePlayerProjectile(GameState& gs, Direction dir);
 
     // ── Disparo desde EnemyManager ────────────────────────────────────────
-    static bool fireEnemyProjectile(GameState& gs, Position origin, Direction dir);
+    static bool fireEnemyProjectile(GameState& gs, Position origin, int velX, int velY);
 
 private:
     static void tickPlayer(GameState& gs, const Level& level);

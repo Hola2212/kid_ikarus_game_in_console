@@ -32,6 +32,8 @@ struct Projectile {
     Position  pos;
     Direction dir{Direction::RIGHT};
     bool      active{false};
+    int       velX{1};
+    int       velY{0};
 };
 
 struct Enemy {

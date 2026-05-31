@@ -1,6 +1,7 @@
 #include "ProjectileManager.h"
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 // ─── Hilo proyectiles de Pit ──────────────────────────────────────────────────
 void ProjectileManager::playerProjThread(GameState* gs, const Level* level) {
@@ -24,12 +25,10 @@ void ProjectileManager::enemyProjThread(GameState* gs, const Level* level) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 bool ProjectileManager::firePlayerProjectile(GameState& gs, Direction dir) {
-    // Intentamos adquirir un slot del semáforo (no bloqueante)
     if (!gs.playerProjSem.try_acquire()) return false;
 
     std::lock_guard<std::mutex> lock(gs.playerProjMutex);
 
-    // Buscar slot libre
     for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
         if (!gs.playerProjs[i].active) {
             Player snapPit;
@@ -37,22 +36,13 @@ bool ProjectileManager::firePlayerProjectile(GameState& gs, Direction dir) {
                 std::lock_guard<std::mutex> pl(gs.pitMutex);
                 snapPit = gs.pit;
             }
-            Direction finalDir = (dir == Direction::NONE)? snapPit.facing: dir;
-            // Posición inicial
+            Direction finalDir = (dir == Direction::NONE) ? snapPit.facing : dir;
             Position start = snapPit.pos;
-            // Hacer que el disparo salga DELANTE de Pit
             switch (finalDir) {
-                case Direction::RIGHT:
-                    start.x += 1;
-                    break;
-                case Direction::LEFT:
-                    start.x -= 1;
-                    break;
-                case Direction::UP:
-                    start.y -= 1;
-                    break;
-                default:
-                    break;
+                case Direction::RIGHT: start.x += 1; break;
+                case Direction::LEFT:  start.x -= 1; break;
+                case Direction::UP:    start.y -= 1; break;
+                default: break;
             }
             gs.playerProjs[i].pos    = start;
             gs.playerProjs[i].dir    = finalDir;
@@ -60,11 +50,11 @@ bool ProjectileManager::firePlayerProjectile(GameState& gs, Direction dir) {
             return true;
         }
     }
-    gs.playerProjSem.release(); // No se usó, devolver
+    gs.playerProjSem.release();
     return false;
 }
 
-bool ProjectileManager::fireEnemyProjectile(GameState& gs, Position origin, Direction dir) {
+bool ProjectileManager::fireEnemyProjectile(GameState& gs, Position origin, int velX, int velY) {
     if (!gs.enemyProjSem.try_acquire()) return false;
 
     std::lock_guard<std::mutex> lock(gs.enemyProjMutex);
@@ -72,7 +62,8 @@ bool ProjectileManager::fireEnemyProjectile(GameState& gs, Position origin, Dire
     for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
         if (!gs.enemyProjs[i].active) {
             gs.enemyProjs[i].pos    = origin;
-            gs.enemyProjs[i].dir    = dir;
+            gs.enemyProjs[i].velX   = velX;
+            gs.enemyProjs[i].velY   = velY;
             gs.enemyProjs[i].active = true;
             return true;
         }
@@ -89,7 +80,6 @@ void ProjectileManager::tickPlayer(GameState& gs, const Level& level) {
         Projectile& p = gs.playerProjs[i];
         if (!p.active) continue;
 
-        // Mover proyectil
         switch (p.dir) {
             case Direction::RIGHT: p.pos.x++; break;
             case Direction::LEFT:  p.pos.x--; break;
@@ -97,14 +87,11 @@ void ProjectileManager::tickPlayer(GameState& gs, const Level& level) {
             default: break;
         }
 
-        // ¿Fuera de pantalla?
         bool outOfBounds = (p.pos.x < 0 || p.pos.x >= SCREEN_WIDTH ||
                             p.pos.y < 0 || p.pos.y >= GAME_HEIGHT);
 
-        // ¿Golpea plataforma?
         bool hitPlat = hitsPlatform(p, level.getPlatforms());
 
-        // ¿Golpea enemigo?
         bool hitEnemy = false;
         {
             std::lock_guard<std::mutex> el(gs.enemyMutex);
@@ -113,9 +100,10 @@ void ProjectileManager::tickPlayer(GameState& gs, const Level& level) {
                     e.hp--;
                     if (e.hp <= 0) {
                         e.alive = false;
-                        // Dar corazones al jugador
                         std::lock_guard<std::mutex> pl(gs.pitMutex);
                         gs.pit.hearts += e.heartsOnDeath;
+                        // Fix puntaje: sumar 10 puntos por enemigo eliminado
+                        gs.score.fetch_add(10);
                     }
                     hitEnemy = true;
                     break;
@@ -125,15 +113,17 @@ void ProjectileManager::tickPlayer(GameState& gs, const Level& level) {
 
         if (outOfBounds || hitPlat || hitEnemy) {
             p.active = false;
-            gs.playerProjSem.release();  // Liberar slot
+            gs.playerProjSem.release();
         }
     }
 }
 
 void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
+    static int tick = 0;
+    ++tick;
+
     std::lock_guard<std::mutex> lock(gs.enemyProjMutex);
 
-    // Snapshot de Pit
     Player pitSnap;
     {
         std::lock_guard<std::mutex> pl(gs.pitMutex);
@@ -144,12 +134,9 @@ void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
         Projectile& p = gs.enemyProjs[i];
         if (!p.active) continue;
 
-        switch (p.dir) {
-            case Direction::RIGHT: p.pos.x++; break;
-            case Direction::LEFT:  p.pos.x--; break;
-            case Direction::UP:    p.pos.y--; break;
-            default: break;
-        }
+        // Movimiento horizontal cada tick, vertical cada 2 ticks
+        p.pos.x += p.velX;
+        if (tick % 2 == 0) p.pos.y += p.velY;
 
         bool outOfBounds = (p.pos.x < 0 || p.pos.x >= SCREEN_WIDTH ||
                             p.pos.y < 0 || p.pos.y >= GAME_HEIGHT);
@@ -158,13 +145,19 @@ void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
 
         if (hitPit) {
             std::lock_guard<std::mutex> pl(gs.pitMutex);
-            gs.pit.hp--;
-            if (gs.pit.hp <= 0) {
-                gs.pit.lives--;
-                gs.pit.hp = MAX_HP;
-                if (gs.pit.lives <= 0) {
-                    gs.status.store(GameStatus::GAME_OVER);
-                    gs.running.store(false);
+            // Fix daño: respetar invencibilidad
+            if (gs.pit.invincibleTicks > 0) {
+                gs.pit.invincibleTicks--;
+            } else {
+                gs.pit.hp--;
+                gs.pit.invincibleTicks = 15;
+                if (gs.pit.hp <= 0) {
+                    gs.pit.lives--;
+                    gs.pit.hp = MAX_HP;
+                    if (gs.pit.lives <= 0) {
+                        gs.status.store(GameStatus::GAME_OVER);
+                        gs.running.store(false);
+                    }
                 }
             }
         }
@@ -178,7 +171,7 @@ void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
 
 // ─── Helpers de colisión ──────────────────────────────────────────────────────
 bool ProjectileManager::hitsPlatform(const Projectile& p,
-                                    const std::vector<Level::Platform>& plats) {
+                                     const std::vector<Level::Platform>& plats) {
     for (const auto& plat : plats) {
         if (p.pos.y == plat.y &&
             p.pos.x >= plat.x && p.pos.x < plat.x + plat.length)
@@ -188,7 +181,8 @@ bool ProjectileManager::hitsPlatform(const Projectile& p,
 }
 
 bool ProjectileManager::hitsPlayer(const Projectile& p, const Player& pit) {
-    return (p.pos.x == pit.pos.x && p.pos.y == pit.pos.y);
+    return (std::abs(p.pos.x - pit.pos.x) <= 1 &&
+            std::abs(p.pos.y - pit.pos.y) <= 2);
 }
 
 bool ProjectileManager::hitsEnemy(const Projectile& p, const Enemy& e) {
