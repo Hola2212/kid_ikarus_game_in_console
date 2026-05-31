@@ -72,7 +72,7 @@ void Renderer::render(const GameState& gs, const Level& level) {
     }
 
     // Fondo primero 
-    drawBackground(gs.phase.load(), gs.status.load());
+    //drawBackground(gs.phase.load(), gs.status.load());
 
     // Plataformas con '=' ASCII 
     for (auto& p : level.getPlatforms())
