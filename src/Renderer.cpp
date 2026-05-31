@@ -1,4 +1,7 @@
-
+// Renderer.cpp — Capa visual unificada (Fase 3 · CC3086 · UVG 2025)
+// Sistema: mv()+printf() directo en toda la capa visual.
+// Sin buffer back_[]/front_[]. Sin put()/putStr()/flush().
+// UTF-8 funciona porque los strings llegan al terminal completos.
 #include "Renderer.h"
 #include "HUD.h"
 #include <cstdio>
@@ -7,7 +10,7 @@
 static inline void mv(int x, int y) { printf("\033[%d;%dH", y, x); }
 static inline void cls()            { printf("\033[H\033[2J"); fflush(stdout); }
 
-// Colores ANSI — solo para pantallas estáticas, nunca en render() principal
+// Colores ANSI — solo pantallas estáticas, nunca en render() principal
 #define COL_GOLD    "\033[33m"
 #define COL_CYAN    "\033[36m"
 #define COL_RED     "\033[31m"
@@ -16,9 +19,10 @@ static inline void cls()            { printf("\033[H\033[2J"); fflush(stdout); }
 #define COL_BOLD    "\033[1m"
 #define COL_RESET   "\033[0m"
 
-// Sprite sheet de Pit — 6 frames x 4 filas x 5 cols (vw=5 verificado)
-// El punto lógico de colisión (pos.x, pos.y) cae en col 2, fila 3 del sprite.
-
+// =============================================================================
+// SPRITE SHEETS
+// mv()+printf() directo — el string UTF-8 llega al terminal intacto
+// =============================================================================
 const char* const Renderer::PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUNT)][4] = {
     { " (Ö) ", "  ║  ", " )═( ", " ¯ ¯ " },  // IDLE
     { " (Ö) ", "  ║  ", " )═► ", " ¯ ¯ " },  // WALK1
@@ -28,8 +32,6 @@ const char* const Renderer::PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUN
     { "\\(Ö)/", "  ║  ", " )═( ", " ¯ ¯ " },  // VICTORY
 };
 
-// Sprite sheet de enemigos — 3 filas x 5 tipos x 5 cols (vw=5 verificado)
-
 const char* const Renderer::ENEMY_SPRITES[5][3] = {
     { " ░◉░ ", "~~~~~", "     " },  // MONOEYE
     { "≈≈S≈≈", "/\\-\\ ", "     " },  // SHEMUM
@@ -38,48 +40,87 @@ const char* const Renderer::ENEMY_SPRITES[5][3] = {
     { "~<G>~", "║|||║", "▓▓▓▓▓" },  // MEDUSA
 };
 
+// =============================================================================
+// Constructor
+// =============================================================================
 Renderer::Renderer() {
-    printf("\033[?25l");
-    memset(front_, ' ', sizeof(front_));
-    for (int y = 0; y < SCREEN_HEIGHT; ++y)
-        front_[y][SCREEN_WIDTH] = '\0';
-    clear();
+    printf("\033[?25l");  // ocultar cursor
+    // Inicializar tracking de posiciones anteriores
+    prevDrawPitX_ = -99;
+    prevDrawPitY_ = -99;
+    for (int i = 0; i < MAX_TRACKED_ENEMIES; ++i) {
+        prevEnemyX_[i] = -99;
+        prevEnemyY_[i] = -99;
+        prevEnemyActive_[i] = false;
+    }
+    for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
+        prevProjX_[i] = -99;
+        prevProjY_[i] = -99;
+        prevProjActive_[i] = false;
+    }
+    for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
+        prevEProjX_[i] = -99;
+        prevEProjY_[i] = -99;
+        prevEProjActive_[i] = false;
+    }
+    fflush(stdout);
 }
 
+// =============================================================================
+// clearSprite — borra un área rectangular con espacios
+// Guard: no tocar filas del HUD (1-4 del terminal = rows 1-4)
+// =============================================================================
+void Renderer::clearSprite(int drawX, int drawY, int cols, int rows) {
+    for (int row = 0; row < rows; ++row) {
+        int absRow = drawY + row;
+        if (absRow + 1 < GAME_ROW_START + 1) continue;  // no pisar HUD
+        if (absRow >= SCREEN_HEIGHT) break;
+        mv(drawX + 1, absRow + 1);
+        for (int c = 0; c < cols; ++c) printf(" ");
+    }
+}
+
+// =============================================================================
+// RENDER PRINCIPAL
+// fullRedraw_: cls() + fondo + plataformas completos
+// Frame normal: solo borrar/redibujar elementos que se mueven
+// =============================================================================
 void Renderer::render(const GameState& gs, const Level& level) {
-
     GameStatus st = gs.status.load();
-
-    if (st != GameStatus::RUNNING &&
-        st != GameStatus::BOSS &&
+    if (st != GameStatus::RUNNING && st != GameStatus::BOSS &&
         st != GameStatus::PAUSED)
         return;
 
     ++frame_;
 
-if (fullRedraw_) {
+    // Limpiar overlay de pausa al reanudar
+    if (prevStatus_ == GameStatus::PAUSED && st != GameStatus::PAUSED)
+        fullRedraw_ = true;
+    prevStatus_ = st;
 
-    cls();
+    // fullRedraw_: redibujar todo desde cero
+    if (fullRedraw_) {
+        cls();
+        drawBackground(gs.phase.load(), st);
+        // Plataformas — string de '=' por plataforma, directo
+        for (auto& p : level.getPlatforms()) {
+            int drawY = p.y + GAME_ROW_START;
+            if (drawY < GAME_ROW_START || drawY >= SCREEN_HEIGHT) continue;
+            int x0 = p.x;
+            int x1 = std::min(p.x + p.length, SCREEN_WIDTH);
+            if (x0 >= x1) continue;
+            mv(x0 + 1, drawY + 1);
+            for (int i = x0; i < x1; ++i) printf("=");
+        }
+        // Resetear tracking para que todo se redibuje
+        prevDrawPitX_ = -99;
+        for (int i = 0; i < MAX_TRACKED_ENEMIES; ++i) prevEnemyActive_[i] = false;
+        for (int i = 0; i < MAX_PLAYER_PROJ;     ++i) prevProjActive_[i]  = false;
+        for (int i = 0; i < MAX_ENEMY_PROJ;      ++i) prevEProjActive_[i] = false;
+        fullRedraw_ = false;
+    }
 
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
-
-    fullRedraw_ = false;
-}
-
-if (prevStatus_ == GameStatus::PAUSED &&
-    st != GameStatus::PAUSED) {
-
-    fullRedraw_ = true;
-}
-
-prevStatus_ = st;
-
-clear();
-
-
-    // Detectar movimiento real de Pit para elegir IDLE vs WALK
-    // Se reutiliza el pitMutex existente — sin mutex nuevo
+    // ── Detectar movimiento de Pit ────────────────────────────────────────────
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.pitMutex));
         pitMoving_ = (gs.pit.pos.x != prevPitX_ || gs.pit.pos.y != prevPitY_);
@@ -87,55 +128,85 @@ clear();
         prevPitY_  = gs.pit.pos.y;
     }
 
-    // Fondo primero 
-    //drawBackground(gs.phase.load(), gs.status.load());
-
-    // Plataformas con '=' ASCII 
-   for (auto& p : level.getPlatforms()) {
-
-    int end = std::min(
-        p.x + p.length,
-        SCREEN_WIDTH
-    );
-
-    for (int i = p.x; i < end; ++i)
-        put(i, p.y + GAME_ROW_START, '=');
-}
-
+    // ── Proyectiles enemigos — borrar anterior, dibujar nuevo ────────────────
     {
-        std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyMutex));
-        for (auto& e : gs.enemies) {
-            if (!e.alive) continue;
-            drawEnemySprite(e.pos.x, e.pos.y + GAME_ROW_START, e.type, e.dir);
+        std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyProjMutex));
+        for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
+            // Borrar posición anterior si cambió o se desactivó
+            if (prevEProjActive_[i]) {
+                int py = prevEProjY_[i] + GAME_ROW_START;
+                if (py >= GAME_ROW_START && py < SCREEN_HEIGHT) {
+                    mv(prevEProjX_[i] + 1, py + 1); printf("  ");
+                }
+            }
+            prevEProjActive_[i] = gs.enemyProjs[i].active;
+            if (gs.enemyProjs[i].active) {
+                prevEProjX_[i] = gs.enemyProjs[i].pos.x;
+                prevEProjY_[i] = gs.enemyProjs[i].pos.y;
+                int py = gs.enemyProjs[i].pos.y + GAME_ROW_START;
+                if (py >= GAME_ROW_START && py < SCREEN_HEIGHT) {
+                    mv(gs.enemyProjs[i].pos.x + 1, py + 1);
+                    printf("*~");
+                }
+            }
         }
     }
 
-    // Proyectiles enemigos 
-    {
-        std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyProjMutex));
-        for (int i = 0; i < MAX_ENEMY_PROJ; ++i)
-            if (gs.enemyProjs[i].active) {
-                put(gs.enemyProjs[i].pos.x,     gs.enemyProjs[i].pos.y + GAME_ROW_START, '*');
-                put(gs.enemyProjs[i].pos.x + 1, gs.enemyProjs[i].pos.y + GAME_ROW_START, '~');
-            }
-    }
-
-    // Proyectiles del jugador
+    // ── Proyectiles del jugador — borrar anterior, dibujar nuevo ─────────────
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.playerProjMutex));
         for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
-            if (!gs.playerProjs[i].active) continue;
-            char head, trail;
-            if      (gs.playerProjs[i].dir == Direction::LEFT) { head = '<'; trail = '.'; }
-            else if (gs.playerProjs[i].dir == Direction::UP)   { head = '^'; trail = '|'; }
-            else                                               { head = '>'; trail = '.'; }
-            put(gs.playerProjs[i].pos.x, gs.playerProjs[i].pos.y + GAME_ROW_START, head);
-            int tx = gs.playerProjs[i].pos.x +
-                     (gs.playerProjs[i].dir == Direction::LEFT ? 1 : -1);
-            put(tx, gs.playerProjs[i].pos.y + GAME_ROW_START, trail);
+            if (prevProjActive_[i]) {
+                int py = prevProjY_[i] + GAME_ROW_START;
+                if (py >= GAME_ROW_START && py < SCREEN_HEIGHT) {
+                    mv(prevProjX_[i] + 1, py + 1); printf("  ");
+                }
+            }
+            prevProjActive_[i] = gs.playerProjs[i].active;
+            if (gs.playerProjs[i].active) {
+                prevProjX_[i] = gs.playerProjs[i].pos.x;
+                prevProjY_[i] = gs.playerProjs[i].pos.y;
+                int py = gs.playerProjs[i].pos.y + GAME_ROW_START;
+                if (py >= GAME_ROW_START && py < SCREEN_HEIGHT) {
+                    char head;
+                    if      (gs.playerProjs[i].dir == Direction::LEFT) head = '<';
+                    else if (gs.playerProjs[i].dir == Direction::UP)   head = '^';
+                    else                                               head = '>';
+                    mv(gs.playerProjs[i].pos.x + 1, py + 1);
+                    printf("%c.", head);
+                }
+            }
         }
     }
 
+    // ── Enemigos ──────────────────────────────────────────────────────────────
+    {
+        std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyMutex));
+        int idx = 0;
+        for (auto& e : gs.enemies) {
+            if (idx >= MAX_TRACKED_ENEMIES) break;
+            // Borrar sprite anterior si el enemigo se movió
+            if (prevEnemyActive_[idx]) {
+                clearSprite(prevEnemyX_[idx] - 2, prevEnemyY_[idx] - 2, 5, 3);
+            }
+            prevEnemyActive_[idx] = e.alive;
+            if (e.alive) {
+                prevEnemyX_[idx] = e.pos.x;
+                prevEnemyY_[idx] = e.pos.y + GAME_ROW_START;
+                drawEnemySprite(e.pos.x, e.pos.y + GAME_ROW_START, e.type, e.dir);
+            }
+            ++idx;
+        }
+        // Borrar enemigos que ya no existen
+        for (; idx < MAX_TRACKED_ENEMIES; ++idx) {
+            if (prevEnemyActive_[idx]) {
+                clearSprite(prevEnemyX_[idx] - 2, prevEnemyY_[idx] - 2, 5, 3);
+                prevEnemyActive_[idx] = false;
+            }
+        }
+    }
+
+    // ── Pit ───────────────────────────────────────────────────────────────────
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.pitMutex));
         if (gs.pit.invincibleTicks == 0 || frame_ % 4 >= 2) {
@@ -145,117 +216,81 @@ clear();
         }
     }
 
-    // flush() primero: dibuja sprites y plataformas del buffer
-    flush();
-    memcpy(front_, back_, sizeof(back_));
-    // drawHUD() después: directo a terminal, siempre encima del juego
     drawHUD(gs);
     fflush(stdout);
 }
 
-
+// =============================================================================
+// drawBackground — fondo temático por fase, mv()+printf() directo
+// Coordenadas: top=fila 4, mid=fila 12, bot=fila 22
+// =============================================================================
 void Renderer::drawBackground(int phase, GameStatus status) {
     const int top = GAME_ROW_START;
     const int mid = GAME_ROW_START + 8;
     const int bot = SCREEN_HEIGHT - 2;
 
     if (status == GameStatus::BOSS) {
-        putStr(0, top,   "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓");
-        putStr(0, top+1, "║~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~║");
-        putStr(0, mid,   "║     ║                                                                    ║    ");
-        putStr(0, mid+1, "║ ▓▓▓ ║                                                                    ║ ▓▓▓");
-        putStr(0, bot,   "▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼");
+        mv(1, top+1);   printf("▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓");
+        mv(1, top+2);   printf("║~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~║");
+        mv(1, mid+1);   printf("║     ║                                                                    ║");
+        mv(1, mid+2);   printf("║ ▓▓▓ ║                                                                    ║");
+        mv(1, bot+1);   printf("▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼");
     } else if (phase == 1) {
-        putStr(0, top,   "  ✦       ✦          ✦              ✦          ✦        ✦             ✦     ");
-        putStr(0, top+1, "      ✦        ✦               ✦        ✦                   ✦              ✦ ");
-        putStr(0, mid,   "  │       │           │              │          │        │             │     ");
-        putStr(0, mid+1, "  │       │           │              │          │        │             │     ");
-        putStr(0, bot,   "~~╨~~~~~~~╨~~~~~~~~~~~╨~~~~~~~~~~~~~~╨~~~~~~~~~~╨~~~~~~~~╨~~~~~~~~~~~~~╨~~~~~");
+        mv(1, top+1);   printf("  ✦       ✦          ✦              ✦          ✦        ✦             ✦    ");
+        mv(1, top+2);   printf("      ✦        ✦               ✦        ✦                   ✦             ");
+        mv(1, mid+1);   printf("  │       │           │              │          │        │             │   ");
+        mv(1, mid+2);   printf("  │       │           │              │          │        │             │   ");
+        mv(1, bot+1);   printf("~~╨~~~~~~~╨~~~~~~~~~~~╨~~~~~~~~~~~~~~╨~~~~~~~~~~╨~~~~~~~~╨~~~~~~~~~~~~~╨~~~");
     } else if (phase == 2) {
-        putStr(0, top,   "  _Λ_     _Λ_         _Λ_            _Λ_        _Λ_      _Λ_          _Λ_  ");
-        putStr(0, top+1, " /   \\   /   \\       /   \\          /   \\      /   \\    /   \\        /   / ");
-        putStr(0, mid,   "  ║  ╫    ║              ║    ╫         ║            ║  ╫              ║    ");
-        putStr(0, mid+1, "  ╨  ╨    ╨              ╨    ╨         ╨            ╨  ╨              ╨    ");
-        putStr(0, bot,   "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓");
+        mv(1, top+1);   printf("  _Λ_     _Λ_         _Λ_            _Λ_        _Λ_      _Λ_          _Λ_ ");
+        mv(1, top+2);   printf(" /   \\   /   \\       /   \\          /   \\      /   \\    /   \\        /   /");
+        mv(1, mid+1);   printf("  ║  ╫    ║              ║    ╫         ║            ║  ╫              ║  ");
+        mv(1, mid+2);   printf("  ╨  ╨    ╨              ╨    ╨         ╨            ╨  ╨              ╨  ");
+        mv(1, bot+1);   printf("▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓");
     } else {
-        putStr(0, top,   "▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓");
-        putStr(0, top+1, "║                                                                              ║");
-        putStr(0, mid,   "║  ▐▌     ▐▌      ▐▌       ▐▌      ▐▌       ▐▌      ▐▌       ▐▌      ▐▌     ║");
-        putStr(0, mid+1, "║                                                                              ║");
-        putStr(0, bot,   "╚═══════════════════════════════════════════════════════════════════════════════");
+        mv(1, top+1);   printf("▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓ ▓");
+        mv(1, top+2);   printf("║                                                                          ║");
+        mv(1, mid+1);   printf("║  ▐▌     ▐▌      ▐▌       ▐▌      ▐▌       ▐▌      ▐▌       ▐▌      ▐▌ ║");
+        mv(1, mid+2);   printf("║                                                                          ║");
+        mv(1, bot+1);   printf("╚══════════════════════════════════════════════════════════════════════════");
     }
 }
 
-
+// =============================================================================
+// drawPitSprite — borra sprite anterior, dibuja nuevo
+// Guard: absRow >= GAME_ROW_START (no pisar HUD)
+// =============================================================================
 void Renderer::drawPitSprite(int x, int y, SpriteFrame f, bool facingLeft) {
-
     int fi = static_cast<int>(f);
-
     if (facingLeft) {
-        if (f == SpriteFrame::WALK1)
-            fi = static_cast<int>(SpriteFrame::WALK2);
-        else if (f == SpriteFrame::WALK2)
-            fi = static_cast<int>(SpriteFrame::WALK1);
+        if (f == SpriteFrame::WALK1) fi = static_cast<int>(SpriteFrame::WALK2);
+        else if (f == SpriteFrame::WALK2) fi = static_cast<int>(SpriteFrame::WALK1);
     }
-
     int drawX = x - 2;
     int drawY = y - 3;
+    if (drawX + 5 > SCREEN_WIDTH) drawX = SCREEN_WIDTH - 5;
+    if (drawX < 0)                drawX = 0;
 
-    if (drawX + 5 > SCREEN_WIDTH)
-        drawX = SCREEN_WIDTH - 5;
-
-    if (drawX < 0)
-        drawX = 0;
-
-    // -------------------------------------------------
-    // BORRAR SPRITE ANTERIOR
-    // -------------------------------------------------
-
-    if (prevDrawPitX_ > -50) {
-
-        for (int row = 0; row < 4; ++row) {
-
-            int oldRow = prevDrawPitY_ + row;
-
-            if (oldRow < GAME_ROW_START)
-                continue;
-
-            if (oldRow >= SCREEN_HEIGHT)
-                break;
-
-            mv(prevDrawPitX_ + 1, oldRow + 1);
-
-            printf("     ");
-        }
-    }
-
-    // -------------------------------------------------
-    // GUARDAR POSICIÓN ACTUAL
-    // -------------------------------------------------
+    // Borrar sprite anterior
+    if (prevDrawPitX_ > -99)
+        clearSprite(prevDrawPitX_, prevDrawPitY_, 5, 4);
 
     prevDrawPitX_ = drawX;
     prevDrawPitY_ = drawY;
 
-    // -------------------------------------------------
-    // DIBUJAR SPRITE NUEVO
-    // -------------------------------------------------
-
+    // Dibujar sprite nuevo
     for (int row = 0; row < 4; ++row) {
-
         int absRow = drawY + row;
-
-        if (absRow < GAME_ROW_START)
-            continue;
-
-        if (absRow >= SCREEN_HEIGHT)
-            break;
-
+        if (absRow < GAME_ROW_START) continue;
+        if (absRow >= SCREEN_HEIGHT) break;
         mv(drawX + 1, absRow + 1);
-
         printf("%s", PIT_SPRITES[fi][row]);
     }
 }
 
+// =============================================================================
+// drawEnemySprite — mv()+printf() directo
+// =============================================================================
 void Renderer::drawEnemySprite(int x, int y, EnemyType type, Direction dir) {
     (void)dir;
     int ti = static_cast<int>(type);
@@ -271,8 +306,10 @@ void Renderer::drawEnemySprite(int x, int y, EnemyType type, Direction dir) {
     }
 }
 
-// pitMoving_ detecta movimiento real — pit.facing siempre es LEFT o RIGHT,
-// nunca NONE, así que no sirve para distinguir IDLE de WALK.
+// =============================================================================
+// getPlayerFrame — pitMoving_ detecta IDLE real
+// pit.facing siempre es LEFT o RIGHT, nunca NONE
+// =============================================================================
 SpriteFrame Renderer::getPlayerFrame(const Player& pit) const {
     if (pit.invincibleTicks > 0 && frame_ % 6 < 3) return SpriteFrame::DAMAGE;
     if (!pit.onGround)                              return SpriteFrame::JUMP;
@@ -281,19 +318,18 @@ SpriteFrame Renderer::getPlayerFrame(const Player& pit) const {
     return SpriteFrame::IDLE;
 }
 
-
+// =============================================================================
+// drawHUD — mv()+printf() directo, filas 1-4 del terminal
+// UTF-8 funciona porque printf envía el string completo
+// buffer 200 bytes en snprintf porque ♥ ocupa 3 bytes UTF-8
+// =============================================================================
 void Renderer::drawHUD(const GameState& gs) {
- 
-
     HUDData h = HUD::getSnapshot();
 
-    // Fila 0: ╔═══════════════════════════════════════════════════════════════╗
-    mv(1, 1);
-    printf("╔");
+    mv(1, 1); printf("╔");
     for (int x = 1; x < SCREEN_WIDTH - 1; ++x) printf("═");
     printf("╗");
 
-    // Fila 1: ║ LVS:♥♥♥  HP:[####--]  score  fase  enemigos  corazones ║
     char lives[16];
     snprintf(lives, sizeof(lives), " %s%s%s ",
         h.lives > 0 ? "♥" : "♡",
@@ -316,38 +352,35 @@ void Renderer::drawHUD(const GameState& gs) {
     mv(1, 2);
     printf("║ LVS:%s HP:%s ★%05d  F:%d  Enm:%02d  Hrt:%02d",
            lives, hpBar, h.score, h.phase, alive, h.hearts);
-    // Rellenar hasta el borde derecho y cerrar
-    mv(SCREEN_WIDTH, 2);
-    printf("║");
+    mv(SCREEN_WIDTH, 2); printf("║");
 
-    // Fila 2: ╠═══════════════════════════════════════════════════════════════╣
-    mv(1, 3);
-    printf("╠");
+    mv(1, 3); printf("╠");
     for (int x = 1; x < SCREEN_WIDTH - 1; ++x) printf("═");
     printf("╣");
 
-    // Fila 3: ║ controles contextuales ║
-    mv(1, 4);
-    printf("║");
+    mv(1, 4); printf("║");
     const char* ctrl = " [SPC]►Fire  [W]▲Jump  [A/D]Move  [P]Pause  [ESC]Menu";
     if (h.status == GameStatus::PAUSED)
         ctrl = " ⏸ PAUSED ⏸   [P] Resume                  [ESC] Main Menu";
     if (h.status == GameStatus::BOSS)
         ctrl = " ⚠ BOSS: MEDUSA!  Defeat the Gorgon and rescue Palutena!  ⚠";
     printf("%s", ctrl);
-    mv(SCREEN_WIDTH, 4);
-    printf("║");
+    mv(SCREEN_WIDTH, 4); printf("║");
 
     fflush(stdout);
 }
 
-
+// =============================================================================
+// PANTALLAS ESTÁTICAS — cls() + limpiar tracking + fullRedraw_
+// =============================================================================
 void Renderer::renderMenu() {
     cls();
-    // Limpiar buffers para que flush() no redibuje residuos del juego
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
-    fflush(stdout);
+    // Resetear tracking para que render() no deje residuos al volver al juego
+    prevDrawPitX_ = -99;
+    for (int i = 0; i < MAX_TRACKED_ENEMIES; ++i) prevEnemyActive_[i] = false;
+    for (int i = 0; i < MAX_PLAYER_PROJ;     ++i) prevProjActive_[i]  = false;
+    for (int i = 0; i < MAX_ENEMY_PROJ;      ++i) prevEProjActive_[i] = false;
+    fullRedraw_ = true;
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
@@ -375,21 +408,16 @@ void Renderer::renderMenu() {
     printf("║                                                                              ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf(COL_DIM COL_GOLD);
-    printf("║  Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
+    printf("║  (c) 2025  Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
     printf(COL_GOLD COL_BOLD);
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
-
-    fullRedraw_ = true;
 }
-
 
 void Renderer::renderInstructions() {
     cls();
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
-    fflush(stdout);
+    fullRedraw_ = true;
     printf(COL_CYAN COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║           ─── MANUAL DEL HÉROE ───   Kid Icarus · Servant of Palutena     ║\n");
@@ -414,17 +442,11 @@ void Renderer::renderInstructions() {
     printf("╚════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
-    
-    fullRedraw_ = true;
 }
-
-
 
 void Renderer::renderScores() {
     cls();
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
-    fflush(stdout);
+    fullRedraw_ = true;
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║   ✦ ══════════════  SALÓN DE HÉROES DE PALUTENA  ══════════════ ✦          ║\n");
@@ -432,7 +454,6 @@ void Renderer::renderScores() {
     printf("║  # ║  NOMBRE            ║   SCORE    ║  FASE    ║  RANGO                   ║\n");
     printf("╠════╬════════════════════╬════════════╬══════════╬═══════════════════════════╣\n");
     printf(COL_RESET COL_GOLD);
-
     const char* ranks[] = {
         "  ★ Campeón Divino    ",
         "  ✦ Héroe Legendario  ",
@@ -440,7 +461,6 @@ void Renderer::renderScores() {
         "  ◇ Guardián del Cielo",
         "  · Aprendiz Alado    ",
     };
-
     FILE* f = fopen("scores.txt", "r");
     char name[32]; int score, phase, rank = 0;
     if (f) {
@@ -457,20 +477,16 @@ void Renderer::renderScores() {
         printf(COL_DIM "║  %d ║  ·····             ║  ·······   ║  ······   ║ ······················  ║\n" COL_RESET COL_GOLD, rank + 1);
         ++rank;
     }
-
     printf("╠════╩════════════════════╩════════════╩══════════╩═══════════════════════════╣\n");
     printf("║                     [ Any key ]  Volver al Olimpo                          ║\n");
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
-    
-    fullRedraw_ = true;
 }
-
-
 
 void Renderer::renderShop(const GameState& gs) {
     cls();
+    fullRedraw_ = true;
     int hearts, hp;
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.pitMutex));
@@ -497,12 +513,9 @@ void Renderer::renderShop(const GameState& gs) {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
-    
-    fullRedraw_ = true;
 }
 
-
-
+// No llama cls() — campo de juego visible detrás del overlay
 void Renderer::renderPause(const GameState& gs) {
     HUDData h = HUD::getSnapshot();
     mv(10, 7);
@@ -528,12 +541,9 @@ void Renderer::renderPause(const GameState& gs) {
     fflush(stdout);
 }
 
-
 void Renderer::renderGameOver() {
     cls();
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
-    fflush(stdout);
+    fullRedraw_ = true;
     HUDData h = HUD::getSnapshot();
     printf(COL_RED COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -565,17 +575,11 @@ void Renderer::renderGameOver() {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
-    
-    fullRedraw_ = true;
 }
-
-
 
 void Renderer::renderVictory() {
     cls();
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
-    fflush(stdout);
+    fullRedraw_ = true;
     HUDData h = HUD::getSnapshot();
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -613,37 +617,4 @@ void Renderer::renderVictory() {
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
-    
-    fullRedraw_ = true;
-}
-
-
-
-void Renderer::clear() {
-    for (int y = 0; y < SCREEN_HEIGHT; ++y) {
-        memset(back_[y], ' ', SCREEN_WIDTH);
-        back_[y][SCREEN_WIDTH] = '\0';
-    }
-}
-
-void Renderer::put(int x, int y, char c) {
-    if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
-        back_[y][x] = c;
-}
-
-
-void Renderer::putStr(int x, int y, const char* s) {
-    if (y < 0 || y >= SCREEN_HEIGHT) return;
-    for (int i = 0; s[i] && x + i < SCREEN_WIDTH; ++i)
-        if (x + i >= 0)
-            back_[y][x + i] = s[i];
-}
-
-void Renderer::flush() {
-    for (int y = 0; y < SCREEN_HEIGHT; ++y)
-        for (int x = 0; x < SCREEN_WIDTH; ++x)
-            if (back_[y][x] != front_[y][x]) {
-                mv(x + 1, y + 1);
-                putchar(back_[y][x]);
-            }
 }
