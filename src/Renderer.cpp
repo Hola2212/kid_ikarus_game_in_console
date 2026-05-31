@@ -1,4 +1,3 @@
-
 #include "Renderer.h"
 #include "HUD.h"
 #include <cstdio>
@@ -91,19 +90,18 @@ clear();
     }
 
     // Fondo primero 
-    //drawBackground(gs.phase.load(), gs.status.load());
+    drawBackground(gs.phase.load(), gs.status.load());
 
-    // Plataformas con '=' ASCII 
-   for (auto& p : level.getPlatforms()) {
-
-    int end = std::min(
-        p.x + p.length,
-        SCREEN_WIDTH
-    );
-
-    for (int i = p.x; i < end; ++i)
-        put(i, p.y + GAME_ROW_START, '=');
-}
+    // ── DIAGNÓSTICO: localizar segfault ─────────────────────────────────────
+    printf("A\n"); fflush(stdout);
+    printf("platform count = %zu\n", level.getPlatforms().size()); fflush(stdout);
+    for (auto& p : level.getPlatforms()) {
+        printf("platform x=%d y=%d len=%d\n", p.x, p.y, p.length); fflush(stdout);
+        int end = std::min(p.x + p.length, SCREEN_WIDTH);
+        for (int i = p.x; i < end; ++i)
+            put(i, p.y + GAME_ROW_START, '=');
+    }
+    printf("B\n"); fflush(stdout);
 
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyMutex));
@@ -113,6 +111,7 @@ clear();
         }
     }
 
+    printf("C\n"); fflush(stdout);
     // Proyectiles enemigos 
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyProjMutex));
@@ -139,6 +138,7 @@ clear();
         }
     }
 
+    printf("D\n"); fflush(stdout);
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.pitMutex));
         if (gs.pit.invincibleTicks == 0 || frame_ % 4 >= 2) {
@@ -148,6 +148,7 @@ clear();
         }
     }
 
+    printf("E\n"); fflush(stdout);
     // flush() primero: dibuja sprites y plataformas del buffer
     flush();
     memcpy(front_, back_, sizeof(back_));
@@ -191,70 +192,20 @@ void Renderer::drawBackground(int phase, GameStatus status) {
 
 
 void Renderer::drawPitSprite(int x, int y, SpriteFrame f, bool facingLeft) {
-
     int fi = static_cast<int>(f);
-
     if (facingLeft) {
-        if (f == SpriteFrame::WALK1)
-            fi = static_cast<int>(SpriteFrame::WALK2);
-        else if (f == SpriteFrame::WALK2)
-            fi = static_cast<int>(SpriteFrame::WALK1);
+        if (f == SpriteFrame::WALK1) fi = static_cast<int>(SpriteFrame::WALK2);
+        else if (f == SpriteFrame::WALK2) fi = static_cast<int>(SpriteFrame::WALK1);
     }
-
     int drawX = x - 2;
     int drawY = y - 3;
-
-    if (drawX + 5 > SCREEN_WIDTH)
-        drawX = SCREEN_WIDTH - 5;
-
-    if (drawX < 0)
-        drawX = 0;
-
-    // -------------------------------------------------
-    // BORRAR SPRITE ANTERIOR
-    // -------------------------------------------------
-
-    if (prevDrawPitX_ > -50) {
-
-        for (int row = 0; row < 4; ++row) {
-
-            int oldRow = prevDrawPitY_ + row;
-
-            if (oldRow < GAME_ROW_START)
-                continue;
-
-            if (oldRow >= SCREEN_HEIGHT)
-                break;
-
-            mv(prevDrawPitX_ + 1, oldRow + 1);
-
-            printf("     ");
-        }
-    }
-
-    // -------------------------------------------------
-    // GUARDAR POSICIÓN ACTUAL
-    // -------------------------------------------------
-
-    prevDrawPitX_ = drawX;
-    prevDrawPitY_ = drawY;
-
-    // -------------------------------------------------
-    // DIBUJAR SPRITE NUEVO
-    // -------------------------------------------------
-
+    if (drawX + 5 > SCREEN_WIDTH) drawX = SCREEN_WIDTH - 5;
+    if (drawX < 0)                drawX = 0;
     for (int row = 0; row < 4; ++row) {
-
         int absRow = drawY + row;
-
-        if (absRow < GAME_ROW_START)
-            continue;
-
-        if (absRow >= SCREEN_HEIGHT)
-            break;
-
+        if (absRow < GAME_ROW_START) continue;
+        if (absRow >= SCREEN_HEIGHT) break;
         mv(drawX + 1, absRow + 1);
-
         printf("%s", PIT_SPRITES[fi][row]);
     }
 }
@@ -347,9 +298,14 @@ void Renderer::drawHUD(const GameState& gs) {
 
 void Renderer::renderMenu() {
     cls();
-    // Limpiar buffers para que flush() no redibuje residuos del juego
     memset(front_, ' ', sizeof(front_));
     memset(back_,  ' ', sizeof(back_));
+    // Sobreescribir las 4 filas del HUD con espacios
+    // (drawHUD usa mv()+printf directo — cls() no siempre las borra)
+    for (int row = 1; row <= 4; ++row) {
+        mv(1, row);
+        for (int col = 0; col < SCREEN_WIDTH; ++col) printf(" ");
+    }
     fflush(stdout);
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -392,6 +348,12 @@ void Renderer::renderInstructions() {
     cls();
     memset(front_, ' ', sizeof(front_));
     memset(back_,  ' ', sizeof(back_));
+    // Sobreescribir las 4 filas del HUD con espacios
+    // (drawHUD usa mv()+printf directo — cls() no siempre las borra)
+    for (int row = 1; row <= 4; ++row) {
+        mv(1, row);
+        for (int col = 0; col < SCREEN_WIDTH; ++col) printf(" ");
+    }
     fflush(stdout);
     printf(COL_CYAN COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -427,6 +389,12 @@ void Renderer::renderScores() {
     cls();
     memset(front_, ' ', sizeof(front_));
     memset(back_,  ' ', sizeof(back_));
+    // Sobreescribir las 4 filas del HUD con espacios
+    // (drawHUD usa mv()+printf directo — cls() no siempre las borra)
+    for (int row = 1; row <= 4; ++row) {
+        mv(1, row);
+        for (int col = 0; col < SCREEN_WIDTH; ++col) printf(" ");
+    }
     fflush(stdout);
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -536,6 +504,12 @@ void Renderer::renderGameOver() {
     cls();
     memset(front_, ' ', sizeof(front_));
     memset(back_,  ' ', sizeof(back_));
+    // Sobreescribir las 4 filas del HUD con espacios
+    // (drawHUD usa mv()+printf directo — cls() no siempre las borra)
+    for (int row = 1; row <= 4; ++row) {
+        mv(1, row);
+        for (int col = 0; col < SCREEN_WIDTH; ++col) printf(" ");
+    }
     fflush(stdout);
     HUDData h = HUD::getSnapshot();
     printf(COL_RED COL_BOLD);
@@ -578,6 +552,12 @@ void Renderer::renderVictory() {
     cls();
     memset(front_, ' ', sizeof(front_));
     memset(back_,  ' ', sizeof(back_));
+    // Sobreescribir las 4 filas del HUD con espacios
+    // (drawHUD usa mv()+printf directo — cls() no siempre las borra)
+    for (int row = 1; row <= 4; ++row) {
+        mv(1, row);
+        for (int col = 0; col < SCREEN_WIDTH; ++col) printf(" ");
+    }
     fflush(stdout);
     HUDData h = HUD::getSnapshot();
     printf(COL_GOLD COL_BOLD);
