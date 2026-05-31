@@ -1,4 +1,5 @@
 #include "CollisionSystem.h"
+#include <cmath>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Entry point
@@ -47,8 +48,9 @@ void CollisionSystem::checkPitVsEnemies(GameState& gs) {
             if (!e.alive)
                 continue;
 
-            if (e.pos.x == pitSnap.pos.x &&
-                e.pos.y == pitSnap.pos.y) {
+            // Rango de colisión de 1 celda en cualquier dirección
+            if (std::abs(e.pos.x - pitSnap.pos.x) <= 1 &&
+                std::abs(e.pos.y - pitSnap.pos.y) <= 1) {
 
                 hitIndices.push_back(i);
             }
@@ -69,18 +71,11 @@ void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
 
     std::lock_guard<std::mutex> pl(gs.pitMutex);
 
-    // =========================================
-    // Si Pit sigue dentro del área jugable:
-    // NO hacer nada
-    // =========================================
-
+    // Si Pit sigue dentro del área jugable: NO hacer nada
     if (gs.pit.pos.y < GAME_HEIGHT)
         return;
 
-    // =========================================
     // Respawn
-    // =========================================
-
     gs.pit.pos = {
         SCREEN_WIDTH / 2,
         GAME_HEIGHT - 2
@@ -94,10 +89,7 @@ void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
 
     gs.pit.invincibleTicks = 15;
 
-    // =========================================
     // Daño por caída
-    // =========================================
-
     gs.pit.hp--;
 
     if (gs.pit.hp <= 0) {
@@ -109,8 +101,6 @@ void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
         if (gs.pit.lives <= 0) {
 
             gs.status.store(GameStatus::GAME_OVER);
-
-            gs.running.store(false);
         }
     }
 }
@@ -136,8 +126,6 @@ void CollisionSystem::damagePlayer(GameState& gs, int amount) {
         if (gs.pit.lives <= 0) {
 
             gs.status.store(GameStatus::GAME_OVER);
-
-            gs.running.store(false);
         }
     }
 }

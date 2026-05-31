@@ -115,6 +115,7 @@ void InputHandler::processInput(GameState& gs) {
             if (key == '1' || key == '2') {
 
                 gs.score.store(0);
+                gs.phase.store(1);
 
                 {
                     std::lock_guard<std::mutex> lock(gs.pitMutex);
@@ -122,15 +123,41 @@ void InputHandler::processInput(GameState& gs) {
                     gs.pit.pos.x = SCREEN_WIDTH / 2;
                     gs.pit.pos.y = GAME_HEIGHT - 2;
 
-                    gs.pit.hp = MAX_HP;
-                    gs.pit.lives = MAX_LIVES;
+                    gs.pit.hp     = MAX_HP;
+                    gs.pit.lives  = MAX_LIVES;
+                    gs.pit.hearts = 0;
 
-                    gs.pit.velY = 0;
+                    gs.pit.velY           = 0;
+                    gs.pit.invincibleTicks = 0;
 
-                    gs.pit.onGround = true;
+                    gs.pit.onGround  = true;
+                    gs.pit.crouching = false;
+                    gs.pit.facing    = Direction::RIGHT;
                 }
 
-                gs.status.store(GameStatus::RUNNING);
+                // Liberar semáforos de proyectiles que hayan quedado activos
+                {
+                    std::lock_guard<std::mutex> lock(gs.playerProjMutex);
+                    for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
+                        if (gs.playerProjs[i].active) {
+                            gs.playerProjs[i].active = false;
+                            gs.playerProjSem.release();
+                        }
+                    }
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(gs.enemyProjMutex);
+                    for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
+                        if (gs.enemyProjs[i].active) {
+                            gs.enemyProjs[i].active = false;
+                            gs.enemyProjSem.release();
+                        }
+                    }
+                }
+
+                // GameLoop respawnea enemigos y cambia status a RUNNING
+                gs.restartRequested.store(true);
             }
 
             else if (key == 'i' || key == 'I') {
@@ -168,6 +195,7 @@ void InputHandler::processInput(GameState& gs) {
             if (key == 'r' || key == 'R') {
 
                 gs.score.store(0);
+                gs.phase.store(1);
 
                 {
                     std::lock_guard<std::mutex> lock(gs.pitMutex);
@@ -180,6 +208,7 @@ void InputHandler::processInput(GameState& gs) {
                     gs.pit.hearts = 0;
 
                     gs.pit.velY = 0;
+                    gs.pit.invincibleTicks = 0;
 
                     gs.pit.onGround = true;
                     gs.pit.crouching = false;
@@ -187,29 +216,16 @@ void InputHandler::processInput(GameState& gs) {
                     gs.pit.facing = Direction::RIGHT;
                 }
 
-                // =========================================
-                // RESETEAR ENEMIGOS
-                // =========================================
-
-                {
-                    std::lock_guard<std::mutex> lock(gs.enemyMutex);
-
-                    for (auto& e : gs.enemies) {
-
-                        e.alive = false;
-                    }
-                }
-
-                // =========================================
-                // LIMPIAR PROYECTILES
-                // =========================================
-
+                // Liberar semáforo por cada proyectil activo antes de limpiarlo
                 {
                     std::lock_guard<std::mutex> lock(gs.playerProjMutex);
 
                     for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
 
-                        gs.playerProjs[i].active = false;
+                        if (gs.playerProjs[i].active) {
+                            gs.playerProjs[i].active = false;
+                            gs.playerProjSem.release();
+                        }
                     }
                 }
 
@@ -218,11 +234,15 @@ void InputHandler::processInput(GameState& gs) {
 
                     for (int i = 0; i < MAX_ENEMY_PROJ; ++i) {
 
-                        gs.enemyProjs[i].active = false;
+                        if (gs.enemyProjs[i].active) {
+                            gs.enemyProjs[i].active = false;
+                            gs.enemyProjSem.release();
+                        }
                     }
                 }
 
-                gs.status.store(GameStatus::RUNNING);
+                // GameLoop se encarga de respawnear enemigos y cambiar status
+                gs.restartRequested.store(true);
             }
 
             else if (key == 'm' || key == 'M') {

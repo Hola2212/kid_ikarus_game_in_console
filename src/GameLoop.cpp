@@ -196,15 +196,20 @@ void GameLoop::run() {
         input.processInput(gs);
 
         // =========================================
-        // RESTART COMPLETO
+        // RESTART — respawnear enemigos y reanudar
         // =========================================
 
-        if (gs.status.load() == GameStatus::RUNNING &&
-            gs.pit.lives == MAX_LIVES &&
-            gs.score.load() == 0) {
+        if (gs.restartRequested.load()) {
 
-            // Nada especial aquí,
-            // reset se hace desde InputHandler
+            gs.restartRequested.store(false);
+
+            {
+                std::lock_guard<std::mutex> lock(gs.enemyMutex);
+                gs.enemies.clear();
+                gs.enemies = currentLevel_->spawnEnemies();
+            }
+
+            gs.status.store(GameStatus::RUNNING);
         }
 
         // =====================

@@ -156,7 +156,6 @@ void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
                     gs.pit.hp = MAX_HP;
                     if (gs.pit.lives <= 0) {
                         gs.status.store(GameStatus::GAME_OVER);
-                        gs.running.store(false);
                     }
                 }
             }
