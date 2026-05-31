@@ -7,7 +7,7 @@
 static inline void mv(int x, int y) { printf("\033[%d;%dH", y, x); }
 static inline void cls()            { printf("\033[H\033[2J"); fflush(stdout); }
 
-// Colores ANSI —
+// Colores ANSI — solo para pantallas estáticas, nunca en render() principal
 #define COL_GOLD    "\033[33m"
 #define COL_CYAN    "\033[36m"
 #define COL_RED     "\033[31m"
@@ -16,7 +16,7 @@ static inline void cls()            { printf("\033[H\033[2J"); fflush(stdout); }
 #define COL_BOLD    "\033[1m"
 #define COL_RESET   "\033[0m"
 
-// Sprite sheet de Pit — 6 frames x 4 filas x 5 cols 
+// Sprite sheet de Pit — 6 frames x 4 filas x 5 cols (vw=5 verificado)
 // El punto lógico de colisión (pos.x, pos.y) cae en col 2, fila 3 del sprite.
 
 const char* const Renderer::PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUNT)][4] = {
@@ -28,7 +28,8 @@ const char* const Renderer::PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUN
     { "\\(Ö)/", "  ║  ", " )═( ", " ¯ ¯ " },  // VICTORY
 };
 
-// Sprite sheet de enemigos — 3 filas x 5 tipos x 5 cols
+// Sprite sheet de enemigos — 3 filas x 5 tipos x 5 cols (vw=5 verificado)
+
 const char* const Renderer::ENEMY_SPRITES[5][3] = {
     { " ░◉░ ", "~~~~~", "     " },  // MONOEYE
     { "≈≈S≈≈", "/\\-\\ ", "     " },  // SHEMUM
@@ -36,7 +37,6 @@ const char* const Renderer::ENEMY_SPRITES[5][3] = {
     { " (r) ", " /|\\ ", "     " },  // REAPETTE
     { "~<G>~", "║|||║", "▓▓▓▓▓" },  // MEDUSA
 };
-
 
 Renderer::Renderer() {
     printf("\033[?25l");
@@ -46,7 +46,6 @@ Renderer::Renderer() {
     clear();
 }
 
-
 void Renderer::render(const GameState& gs, const Level& level) {
     // Guard: no dibujar fuera de gameplay activo
     GameStatus st = gs.status.load();
@@ -54,9 +53,17 @@ void Renderer::render(const GameState& gs, const Level& level) {
         st != GameStatus::PAUSED)
         return;
     ++frame_;
+    // Si veníamos de PAUSA, limpiar el área del overlay antes de redibujar
+    if (prevStatus_ == GameStatus::PAUSED && st != GameStatus::PAUSED) {
+        cls();
+        memset(front_, ' ', sizeof(front_));
+        memset(back_,  ' ', sizeof(back_));
+    }
+    prevStatus_ = st;
     clear();
 
     // Detectar movimiento real de Pit para elegir IDLE vs WALK
+    // Se reutiliza el pitMutex existente — sin mutex nuevo
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.pitMutex));
         pitMoving_ = (gs.pit.pos.x != prevPitX_ || gs.pit.pos.y != prevPitY_);
@@ -80,7 +87,7 @@ void Renderer::render(const GameState& gs, const Level& level) {
         }
     }
 
-    // Proyectiles enemigos — ASCII en buffer
+    // Proyectiles enemigos 
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyProjMutex));
         for (int i = 0; i < MAX_ENEMY_PROJ; ++i)
@@ -90,7 +97,7 @@ void Renderer::render(const GameState& gs, const Level& level) {
             }
     }
 
-    // Proyectiles del jugador — ASCII en buffer
+    // Proyectiles del jugador
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.playerProjMutex));
         for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
@@ -122,8 +129,6 @@ void Renderer::render(const GameState& gs, const Level& level) {
     drawHUD(gs);
     fflush(stdout);
 }
-
-// 4 fondos: fase 1 = Templo Celestial, 2 = Ruinas, 3 = Fortaleza, BOSS = Medusa
 
 
 void Renderer::drawBackground(int phase, GameStatus status) {
@@ -194,7 +199,7 @@ void Renderer::drawEnemySprite(int x, int y, EnemyType type, Direction dir) {
 }
 
 // pitMoving_ detecta movimiento real — pit.facing siempre es LEFT o RIGHT,
-
+// nunca NONE, así que no sirve para distinguir IDLE de WALK.
 SpriteFrame Renderer::getPlayerFrame(const Player& pit) const {
     if (pit.invincibleTicks > 0 && frame_ % 6 < 3) return SpriteFrame::DAMAGE;
     if (!pit.onGround)                              return SpriteFrame::JUMP;
@@ -205,7 +210,7 @@ SpriteFrame Renderer::getPlayerFrame(const Player& pit) const {
 
 
 void Renderer::drawHUD(const GameState& gs) {
-  
+ 
 
     HUDData h = HUD::getSnapshot();
 
@@ -297,7 +302,7 @@ void Renderer::renderMenu() {
     printf("║                                                                              ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf(COL_DIM COL_GOLD);
-    printf("║   Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
+    printf("║  (c) 2025  Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
     printf(COL_GOLD COL_BOLD);
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
@@ -522,6 +527,7 @@ void Renderer::renderVictory() {
     printf(COL_RESET);
     fflush(stdout);
 }
+
 
 void Renderer::clear() {
     for (int y = 0; y < SCREEN_HEIGHT; ++y) {
