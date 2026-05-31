@@ -385,32 +385,32 @@ void Renderer::renderMenu() {
     fullRedraw_ = true;
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
-    printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
+    printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦   ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE);
-    printf("║  ██╗  ██╗██╗██████╗     ██╗ ██████╗ █████╗ ██████╗ ██╗   ██╗███████╗       ║\n");
-    printf("║  ██║ ██╔╝██║██╔══██╗    ██║██╔════╝██╔══██╗██╔══██╗██║   ██║██╔════╝       ║\n");
-    printf("║  █████╔╝ ██║██║  ██║    ██║██║     ███████║██████╔╝██║   ██║███████╗       ║\n");
-    printf("║  ██╔═██╗ ██║██║  ██║    ██║██║     ██╔══██║██╔══██╗██║   ██║╚════██║       ║\n");
-    printf("║  ██║  ██╗██║██████╔╝    ██║╚██████╗██║  ██║██║  ██║╚██████╔╝███████║       ║\n");
-    printf("║  ╚═╝  ╚═╝╚═╝╚═════╝     ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝       ║\n");
+    printf("║  ██╗  ██╗██╗██████╗     ██╗ ██████╗ █████╗ ██████╗ ██╗   ██╗███████╗         ║\n");
+    printf("║  ██║ ██╔╝██║██╔══██╗    ██║██╔════╝██╔══██╗██╔══██╗██║   ██║██╔════╝         ║\n");
+    printf("║  █████╔╝ ██║██║  ██║    ██║██║     ███████║██████╔╝██║   ██║███████╗         ║\n");
+    printf("║  ██╔═██╗ ██║██║  ██║    ██║██║     ██╔══██║██╔══██╗██║   ██║╚════██║         ║\n");
+    printf("║  ██║  ██╗██║██████╔╝    ██║╚██████╗██║  ██║██║  ██║╚██████╔╝███████║         ║\n");
+    printf("║  ╚═╝  ╚═╝╚═╝╚═════╝     ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝          ║\n");
     printf(COL_GOLD);
     printf("║                                                                              ║\n");
-    printf("║          ─── The Legend of Pit · Servant of Palutena ───                   ║\n");
+    printf("║          ─── The Legend of Pit · Servant of Palutena ───                     ║\n");
     printf("║                                                                              ║\n");
-    printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
+    printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦   ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE COL_BOLD);
-    printf("║                        ►  START GAME       [1]                              ║\n");
+    printf("║                        ►  START GAME       [1]                               ║\n");
     printf(COL_RESET COL_GOLD);
-    printf("║                           CPU MODE         [2]                              ║\n");
-    printf("║                           INSTRUCTIONS     [I]                              ║\n");
-    printf("║                           HIGH SCORES      [S]                              ║\n");
-    printf("║                           EXIT             [ESC]                            ║\n");
+    printf("║                           CPU MODE         [2]                               ║\n");
+    printf("║                           INSTRUCTIONS     [I]                               ║\n");
+    printf("║                           HIGH SCORES      [S]                               ║\n");
+    printf("║                           EXIT             [ESC]                             ║\n");
     printf("║                                                                              ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf(COL_DIM COL_GOLD);
-    printf("║   Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
+    printf("║          Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4           ║\n");
     printf(COL_GOLD COL_BOLD);
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
@@ -422,26 +422,26 @@ void Renderer::renderInstructions() {
     fullRedraw_ = true;
     printf(COL_CYAN COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
-    printf("║           ─── MANUAL DEL HÉROE ───   Kid Icarus · Servant of Palutena     ║\n");
-    printf("╠═══════════════════════╦════════════════════════════════════════════════════╣\n");
-    printf("║  CONTROLES            ║  ELEMENTOS DEL MUNDO                               ║\n");
-    printf("║                       ║                                                    ║\n");
-    printf("║  [A] / [D]   ◄  ►    ║  ═══  Plataforma            (Ö)  = Pit (tú)       ║\n");
-    printf("║  [W]         ▲ Saltar ║   ░◉░  Monoeye    +30 pts    ║                    ║\n");
-    printf("║  [S]         ▼ Agachar║  ≈≈S≈  Shemum     +20 pts   )═(                  ║\n");
-    printf("║  [SPACE]     ► Disp.  ║   ╔R╗  Reaper     +50 pts   ¯ ¯                  ║\n");
-    printf("║  [C]         ▲ Disp.  ║   (r)  Reapette   +10 pts                         ║\n");
-    printf("║  [P]         Pausa    ║  ~<G>~ MEDUSA!    JEFE                            ║\n");
-    printf("║  [ESC]       Menú     ║                                                    ║\n");
-    printf("║                       ║  ♥♥♥ = Vidas   [####--] = HP   ♦ = Corazones     ║\n");
-    printf("╠═══════════════════════╩════════════════════════════════════════════════════╣\n");
-    printf("║  OBJETIVO: Asciende 3 fases, derrota a Medusa, rescata a Palutena         ║\n");
-    printf("║                                                                            ║\n");
-    printf("║   Fase 1: Templo Celestial    Fase 2: Ruinas Sagradas                     ║\n");
-    printf("║   Fase 3: Fortaleza Oscura    Jefe:   Templo de Medusa                    ║\n");
-    printf("║                                                                            ║\n");
-    printf("║                       [ Any key ] Volver al Olimpo                        ║\n");
-    printf("╚════════════════════════════════════════════════════════════════════════════╝\n");
+    printf("║           ─── MANUAL DEL HÉROE ───   Kid Icarus · Servant of Palutena        ║\n");
+    printf("╠═══════════════════════╦══════════════════════════════════════════════════════╣\n");
+    printf("║  CONTROLES            ║  ELEMENTOS DEL MUNDO                                 ║\n");
+    printf("║                       ║                                                      ║\n");
+    printf("║  [A] / [D]   ◄  ►     ║  ═══  Plataforma            (Ö)  = Pit (tú)          ║\n");
+    printf("║  [W]         ▲ Saltar ║   ░◉░  Monoeye    +30 pts    ║                       ║\n");
+    printf("║  [S]         ▼ Agachar║  ≈≈S≈  Shemum     +20 pts   )═(                      ║\n");
+    printf("║  [SPACE]     ► Disp.  ║   ╔R╗  Reaper     +50 pts   ¯ ¯                      ║\n");
+    printf("║  [C]         ▲ Disp.  ║   (r)  Reapette   +10 pts                            ║\n");
+    printf("║  [P]         Pausa    ║  ~<G>~ MEDUSA!    JEFE                               ║\n");
+    printf("║  [ESC]       Menú     ║                                                      ║\n");
+    printf("║                       ║  ♥♥♥ = Vidas   [####--] = HP   ♦ = Corazones         ║\n");
+    printf("╠═══════════════════════╩══════════════════════════════════════════════════════╣\n");
+    printf("║  OBJETIVO: Asciende 3 fases, derrota a Medusa, rescata a Palutena            ║\n");
+    printf("║                                                                              ║\n");
+    printf("║   Fase 1: Templo Celestial    Fase 2: Ruinas Sagradas                        ║\n");
+    printf("║   Fase 3: Fortaleza Oscura    Jefe:   Templo de Medusa                       ║\n");
+    printf("║                                                                              ║\n");
+    printf("║                       [ Any key ] Volver al Olimpo                           ║\n");
+    printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
 }
@@ -451,17 +451,17 @@ void Renderer::renderScores() {
     fullRedraw_ = true;
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
-    printf("║   ✦ ══════════════  SALÓN DE HÉROES DE PALUTENA  ══════════════ ✦          ║\n");
-    printf("╠════╦════════════════════╦════════════╦══════════╦═══════════════════════════╣\n");
-    printf("║  # ║  NOMBRE            ║   SCORE    ║  FASE    ║  RANGO                   ║\n");
-    printf("╠════╬════════════════════╬════════════╬══════════╬═══════════════════════════╣\n");
+    printf("║       ✦ ══════════════  SALÓN DE HÉROES DE PALUTENA  ══════════════ ✦        ║\n");
+    printf("╠════╦════════════════════╦════════════╦══════════╦════════════════════════════╣\n");
+    printf("║  # ║  NOMBRE            ║   SCORE    ║  FASE    ║  RANGO                     ║\n");
+    printf("╠════╬════════════════════╬════════════╬══════════╬════════════════════════════╣\n");
     printf(COL_RESET COL_GOLD);
     const char* ranks[] = {
-        "  ★ Campeón Divino    ",
-        "  ✦ Héroe Legendario  ",
-        "  ◆ Guerrero Sagrado  ",
-        "  ◇ Guardián del Cielo",
-        "  · Aprendiz Alado    ",
+        "  ★ Campeón Divino        ",
+        "  ✦ Héroe Legendario      ",
+        "  ◆ Guerrero Sagrado      ",
+        "  ◇ Guardián del Cielo    ",
+        "  · Aprendiz Alado        ",
     };
     FILE* f = fopen("scores.txt", "r");
     char name[32]; int score, phase, rank = 0;
@@ -469,7 +469,7 @@ void Renderer::renderScores() {
         while (rank < MAX_SCORES && fscanf(f, "%31s %d %d", name, &score, &phase) == 3) {
             if (rank == 0) printf(COL_WHITE COL_BOLD);
             else           printf(COL_GOLD COL_RESET COL_GOLD);
-            printf("║  %d ║  %-18s  ║  %08d  ║  Fase %-2d  ║ %s ║\n",
+            printf("║ %-2d ║ %-18s ║ %10d ║ Fase %-2d  ║ %-26s ║\n",
                    rank + 1, name, score, phase, ranks[rank]);
             ++rank;
         }
@@ -479,8 +479,8 @@ void Renderer::renderScores() {
         printf(COL_DIM "║  %d ║  ·····             ║  ·······   ║  ······   ║ ······················  ║\n" COL_RESET COL_GOLD, rank + 1);
         ++rank;
     }
-    printf("╠════╩════════════════════╩════════════╩══════════╩═══════════════════════════╣\n");
-    printf("║                     [ Any key ]  Volver al Olimpo                          ║\n");
+    printf("╠════╩════════════════════╩════════════╩══════════╩════════════════════════════╣\n");
+    printf("║                     [ Any key ]  Volver al Olimpo                            ║\n");
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
     fflush(stdout);
@@ -497,20 +497,20 @@ void Renderer::renderShop(const GameState& gs) {
     }
     printf(COL_CYAN COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
-    printf("║               ─── SANTUARIO DE PALUTENA ───                                ║\n");
-    printf("║              « Restore thy strength, brave hero »                          ║\n");
+    printf("║                 ─── SANTUARIO DE PALUTENA ───                                ║\n");
+    printf("║                « Restore thy strength, brave hero »                          ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf("║                                                                              ║\n");
-    printf("║   Corazones actuales:  ♦ %-4d       HP actual: %2d / %2d                    ║\n",
+    printf("║   Corazones actuales:  ♦ %-4d       HP actual: %2d / %2d                     ║\n",
            hearts, hp, MAX_HP);
     printf("║                                                                              ║\n");
     printf("║   HP  [");
     for (int i = 0; i < MAX_HP; ++i) printf("%c", i < hp ? '#' : '-');
     printf("]                                               ║\n");
     printf("║                                                                              ║\n");
-    printf("║   [C]  Comprar +%d HP   (cuesta %d corazones)                               ║\n",
+    printf("║   [C]  Comprar +%d HP   (cuesta %d corazones)                                ║\n",
            SHOP_HP_GAIN, SHOP_HEART_COST);
-    printf("║   [Q]  Continuar a Fase 3  ─── El jefe final aguarda...                    ║\n");
+    printf("║   [Q]  Continuar a Fase 3  ─── El jefe final aguarda...                      ║\n");
     printf("║                                                                              ║\n");
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
@@ -525,11 +525,11 @@ void Renderer::renderPause(const GameState& gs) {
     mv(10, 7);
     printf(COL_CYAN COL_BOLD "╔══════════════════════════════════════════════════╗" COL_RESET);
     mv(10, 8);
-    printf(COL_CYAN COL_BOLD "║    ⏸  JUEGO EN PAUSA  ⏸                        ║" COL_RESET);
+    printf(COL_CYAN COL_BOLD "║      ⏸  JUEGO EN PAUSA  ⏸                        ║" COL_RESET);
     mv(10, 9);
     printf(COL_CYAN "╠══════════════════════════════════════════════════╣" COL_RESET);
     mv(10,10);
-    printf(COL_CYAN "║  Vidas  %c%c%c     Score  %05d     Fase  %d        ║" COL_RESET,
+    printf(COL_CYAN "║  Vidas  %c%c%c     Score  %05d     Fase  %d      ║" COL_RESET,
            h.lives>0?'*':'.', h.lives>1?'*':'.', h.lives>2?'*':'.',
            h.score, h.phase);
     mv(10,11);
@@ -552,29 +552,29 @@ void Renderer::renderGameOver() {
     printf(COL_RED COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║                                                                              ║\n");
-    printf("║                        · · · · · · · · · · ·                                ║\n");
+    printf("║                         · · · · · · · · · · ·                                ║\n");
     printf("║                                                                              ║\n");
-    printf("║  ██████╗  █████╗ ███╗   ███╗███████╗    ██████╗ ██╗   ██╗███████╗██████╗   ║\n");
-    printf("║ ██╔════╝ ██╔══██╗████╗ ████║██╔════╝   ██╔═══██╗██║   ██║██╔════╝██╔══██╗  ║\n");
-    printf("║ ██║  ███╗███████║██╔████╔██║█████╗     ██║   ██║██║   ██║█████╗  ██████╔╝  ║\n");
-    printf("║ ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝     ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗  ║\n");
-    printf("║ ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗   ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║  ║\n");
-    printf("║  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝  ║\n");
+    printf("║    ██████╗  █████╗ ███╗   ███╗███████╗    ██████╗ ██╗   ██╗███████╗██████╗   ║\n");
+    printf("║   ██╔════╝ ██╔══██╗████╗ ████║██╔════╝   ██╔═══██╗██║   ██║██╔════╝██╔══██╗  ║\n");
+    printf("║   ██║  ███╗███████║██╔████╔██║█████╗     ██║   ██║██║   ██║█████╗  ██████╔╝  ║\n");
+    printf("║   ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝     ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗  ║\n");
+    printf("║   ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗   ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║  ║\n");
+    printf("║    ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝  ║\n");
     printf("║                                                                              ║\n");
     printf(COL_RESET COL_RED);
-    printf("║         ─── Pit ha caído en las sombras del Inframundo ───                  ║\n");
+    printf("║         ─── Pit ha caído en las sombras del Inframundo ───                   ║\n");
     printf("║                                                                              ║\n");
-    printf("║                       [×]                                                   ║\n");
-    printf("║                       (║)     ← El héroe ha caído                           ║\n");
-    printf("║                     ~~~║~~~                                                 ║\n");
+    printf("║                       [×]                                                    ║\n");
+    printf("║                       (║)     ← El héroe ha caído                            ║\n");
+    printf("║                     ~~~║~~~                                                  ║\n");
     printf("║                                                                              ║\n");
     printf(COL_GOLD COL_BOLD);
-    printf("║          Score final: %05d           Fase alcanzada: %d                    ║\n",
+    printf("║          Score final: %05d           Fase alcanzada: %d                      ║\n",
            h.score, h.phase);
     printf("║                                                                              ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf(COL_RESET COL_RED);
-    printf("║              [ R ] Jugar de nuevo          [ M ] Menú                      ║\n");
+    printf("║              [ R ] Jugar de nuevo          [ M ] Menú                        ║\n");
     printf(COL_RED COL_BOLD);
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
@@ -587,27 +587,27 @@ void Renderer::renderVictory() {
     HUDData h = HUD::getSnapshot();
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
-    printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
+    printf("║   ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE);
-    printf("║  ██╗   ██╗██╗ ██████╗████████╗ ██████╗ ██████╗ ██╗ █████╗                  ║\n");
-    printf("║  ██║   ██║██║██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗██║██╔══██╗                 ║\n");
-    printf("║  ██║   ██║██║██║        ██║   ██║   ██║██████╔╝██║███████║                 ║\n");
-    printf("║  ╚██╗ ██╔╝██║██║        ██║   ██║   ██║██╔══██╗██║██╔══██║                 ║\n");
-    printf("║   ╚████╔╝ ██║╚██████╗   ██║   ╚██████╔╝██║  ██║██║██║  ██║                 ║\n");
-    printf("║    ╚═══╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝                 ║\n");
+    printf("║    ██╗   ██╗██╗ ██████╗████████╗ ██████╗ ██████╗ ██╗ █████╗                  ║\n");
+    printf("║    ██║   ██║██║██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗██║██╔══██╗                 ║\n");
+    printf("║    ██║   ██║██║██║        ██║   ██║   ██║██████╔╝██║███████║                 ║\n");
+    printf("║    ╚██╗ ██╔╝██║██║        ██║   ██║   ██║██╔══██╗██║██╔══██║                 ║\n");
+    printf("║     ╚████╔╝ ██║╚██████╗   ██║   ╚██████╔╝██║  ██║██║██║  ██║                 ║\n");
+    printf("║      ╚═══╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝                 ║\n");
     printf(COL_GOLD);
     printf("║                                                                              ║\n");
-    printf("║        ─── Medusa derrotada. Palutena libre. El Olimpo se regocija. ───     ║\n");
+    printf("║        ─── Medusa derrotada. Palutena libre. El Olimpo se regocija. ───      ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE);
-    printf("║              \\(Ö)/         \\(Ö)/         \\(Ö)/                             ║\n");
-    printf("║                ║             ║             ║                                ║\n");
-    printf("║               )═(           )═(           )═(                              ║\n");
-    printf("║               ¯ ¯           ¯ ¯           ¯ ¯                              ║\n");
+    printf("║              \\(Ö)/        \\(Ö)/        \\(Ö)/                              ║\n");
+    printf("║                 ║             ║             ║                                ║\n");
+    printf("║                )═(           )═(           )═(                               ║\n");
+    printf("║                ¯ ¯           ¯ ¯           ¯ ¯                               ║\n");
     printf(COL_GOLD);
     printf("║                                                                              ║\n");
-    printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
+    printf("║   ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE COL_BOLD);
     printf("║  ★ Score: %05d   ·   Corazones: %02d   ·   Fase: %d   ·   ¡Gloria Eterna! ★ ║\n",
@@ -616,7 +616,7 @@ void Renderer::renderVictory() {
     printf("║                                                                              ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf(COL_RESET COL_GOLD);
-    printf("║              [ R ] Jugar de nuevo          [ M ] Menú                      ║\n");
+    printf("║              [ R ] Jugar de nuevo          [ M ] Menú                        ║\n");
     printf(COL_GOLD COL_BOLD);
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
