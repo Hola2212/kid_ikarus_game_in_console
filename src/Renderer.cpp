@@ -94,11 +94,16 @@ clear();
     //drawBackground(gs.phase.load(), gs.status.load());
 
     // Plataformas con '=' ASCII 
-    /*
-for (auto& p : level.getPlatforms())
-    for (int i = 0; i < p.length; ++i)
-        put(p.x + i, p.y + GAME_ROW_START, '=');
-*/
+   for (auto& p : level.getPlatforms()) {
+
+    int end = std::min(
+        p.x + p.length,
+        SCREEN_WIDTH
+    );
+
+    for (int i = p.x; i < end; ++i)
+        put(i, p.y + GAME_ROW_START, '=');
+}
 
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyMutex));
