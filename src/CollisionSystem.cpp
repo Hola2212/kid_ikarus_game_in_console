@@ -1,86 +1,161 @@
 #include "CollisionSystem.h"
 
-// ─── Entry point ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Entry point
+// ─────────────────────────────────────────────────────────────────────────────
+
 void CollisionSystem::checkAll(GameState& gs, const Level& /*level*/) {
+
     checkPitVsEnemies(gs);
+
     checkPitOutOfBounds(gs);
 }
 
-// ─── Pit ↔ Enemigo (contacto directo) ────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Pit ↔ Enemigo (contacto directo)
+// ─────────────────────────────────────────────────────────────────────────────
+
 void CollisionSystem::checkPitVsEnemies(GameState& gs) {
+
     // Snapshot de Pit
     Player pitSnap;
+
     {
         std::lock_guard<std::mutex> pl(gs.pitMutex);
-        // Si está invencible, solo decrementar el contador y salir
+
+        // Invencibilidad temporal
         if (gs.pit.invincibleTicks > 0) {
+
             gs.pit.invincibleTicks--;
+
             return;
         }
+
         pitSnap = gs.pit;
     }
 
     // Buscar colisiones con enemigos
     std::vector<int> hitIndices;
+
     {
         std::lock_guard<std::mutex> el(gs.enemyMutex);
+
         for (int i = 0; i < (int)gs.enemies.size(); i++) {
+
             const auto& e = gs.enemies[i];
-            if (!e.alive) continue;
-            if (e.pos.x == pitSnap.pos.x && e.pos.y == pitSnap.pos.y) {
+
+            if (!e.alive)
+                continue;
+
+            if (e.pos.x == pitSnap.pos.x &&
+                e.pos.y == pitSnap.pos.y) {
+
                 hitIndices.push_back(i);
             }
         }
     }
 
     if (!hitIndices.empty()) {
+
         damagePlayer(gs, (int)hitIndices.size());
     }
 }
 
-// ─── Pit cae por el fondo de pantalla ─────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Pit cae fuera del mapa
+// ─────────────────────────────────────────────────────────────────────────────
+
 void CollisionSystem::checkPitOutOfBounds(GameState& gs) {
+
     std::lock_guard<std::mutex> pl(gs.pitMutex);
 
-    if (gs.pit.pos.y < SCREEN_HEIGHT) return;
+    // =========================================
+    // Si Pit sigue dentro del área jugable:
+    // NO hacer nada
+    // =========================================
 
-    // Reaparecer en posición inicial
-    gs.pit.pos      = {SCREEN_WIDTH / 2, SCREEN_HEIGHT - 2};
-    gs.pit.velY     = 0;
+    if (gs.pit.pos.y < GAME_HEIGHT)
+        return;
+
+    // =========================================
+    // Respawn
+    // =========================================
+
+    gs.pit.pos = {
+        SCREEN_WIDTH / 2,
+        GAME_HEIGHT - 2
+    };
+
+    gs.pit.velY = 0;
+
     gs.pit.onGround = true;
-    gs.pit.invincibleTicks = 15;  // invencibilidad al reaparecer también
+
+    gs.pit.crouching = false;
+
+    gs.pit.invincibleTicks = 15;
+
+    // =========================================
+    // Daño por caída
+    // =========================================
 
     gs.pit.hp--;
+
     if (gs.pit.hp <= 0) {
+
         gs.pit.lives--;
+
         gs.pit.hp = MAX_HP;
+
         if (gs.pit.lives <= 0) {
+
             gs.status.store(GameStatus::GAME_OVER);
+
             gs.running.store(false);
         }
     }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
 void CollisionSystem::damagePlayer(GameState& gs, int amount) {
+
     std::lock_guard<std::mutex> pl(gs.pitMutex);
+
     gs.pit.hp -= amount;
-    gs.pit.invincibleTicks = 15;  // ~1.5 segundos de invencibilidad
+
+    gs.pit.invincibleTicks = 15;
+
     if (gs.pit.hp <= 0) {
+
         gs.pit.lives--;
+
         gs.pit.hp = MAX_HP;
+
         if (gs.pit.lives <= 0) {
+
             gs.status.store(GameStatus::GAME_OVER);
+
             gs.running.store(false);
         }
     }
 }
 
-void CollisionSystem::damageEnemy(Enemy& e, int amount, GameState& gs) {
+void CollisionSystem::damageEnemy(
+    Enemy& e,
+    int amount,
+    GameState& gs
+) {
+
     e.hp -= amount;
+
     if (e.hp <= 0) {
+
         e.alive = false;
+
         std::lock_guard<std::mutex> pl(gs.pitMutex);
+
         gs.pit.hearts += e.heartsOnDeath;
     }
 }

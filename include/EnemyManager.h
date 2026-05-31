@@ -27,7 +27,6 @@ private:
     static void moveMedusa  (Enemy& e, int tick);
 
     // Invoca Reapettes; llama bajo enemyMutex ya tomado
-    static void spawnReapettes(Enemy& reaper, GameState& gs);
-
+    static void spawnReapettes(Enemy& reaper,GameState& gs,std::vector<Enemy>& pendingAdds);
     static int speedForPhase(int phase);  // multiplicador de velocidad
 };
