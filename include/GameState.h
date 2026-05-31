@@ -7,6 +7,7 @@
 
 // ─── Enumeraciones ────────────────────────────────────────────────────────────
 enum class GameStatus {
+    SPLASH,
     MENU,
     INSTRUCTIONS,
     SCORES,
@@ -59,7 +60,7 @@ struct Player {
 // ─── Estado global compartido ─────────────────────────────────────────────────
 struct GameState {
     // ── Estado principal ──────────────────────────────────────────────────
-    std::atomic<GameStatus> status{GameStatus::MENU};
+    std::atomic<GameStatus> status{GameStatus::SPLASH};
     std::atomic<int>        phase{1};           // Fase actual (1-3)
     std::atomic<bool>       running{false};     // Game loop activo
     std::atomic<int>        score{0};       // Puntuación del jugador
