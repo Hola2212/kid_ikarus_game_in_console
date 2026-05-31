@@ -297,7 +297,7 @@ void Renderer::renderMenu() {
     printf("║                                                                              ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf(COL_DIM COL_GOLD);
-    printf("║  (c) 2025  Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
+    printf("║   Universidad del Valle de Guatemala  ·  CC3086  ·  Grupo 4       ║\n");
     printf(COL_GOLD COL_BOLD);
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf(COL_RESET);
