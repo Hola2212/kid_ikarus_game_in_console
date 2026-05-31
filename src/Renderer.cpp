@@ -70,10 +70,7 @@ if (fullRedraw_) {
 if (prevStatus_ == GameStatus::PAUSED &&
     st != GameStatus::PAUSED) {
 
-    cls();
-
-    memset(front_, ' ', sizeof(front_));
-    memset(back_,  ' ', sizeof(back_));
+    fullRedraw_ = true;
 }
 
 prevStatus_ = st;
