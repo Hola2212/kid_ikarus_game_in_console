@@ -1,3 +1,4 @@
+
 #include "Renderer.h"
 #include "HUD.h"
 #include <cstdio>
@@ -6,7 +7,7 @@
 static inline void mv(int x, int y) { printf("\033[%d;%dH", y, x); }
 static inline void cls()            { printf("\033[H\033[2J"); fflush(stdout); }
 
-// Colores ANSI
+// Colores ANSI —
 #define COL_GOLD    "\033[33m"
 #define COL_CYAN    "\033[36m"
 #define COL_RED     "\033[31m"
@@ -15,8 +16,9 @@ static inline void cls()            { printf("\033[H\033[2J"); fflush(stdout); }
 #define COL_BOLD    "\033[1m"
 #define COL_RESET   "\033[0m"
 
-// Sprite sheet de Pit  6 frames x 4 filas x 5 cols 
+// Sprite sheet de Pit — 6 frames x 4 filas x 5 cols 
 // El punto lógico de colisión (pos.x, pos.y) cae en col 2, fila 3 del sprite.
+
 const char* const Renderer::PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUNT)][4] = {
     { " (Ö) ", "  ║  ", " )═( ", " ¯ ¯ " },  // IDLE
     { " (Ö) ", "  ║  ", " )═► ", " ¯ ¯ " },  // WALK1
@@ -26,8 +28,7 @@ const char* const Renderer::PIT_SPRITES[static_cast<int>(SpriteFrame::FRAME_COUN
     { "\\(Ö)/", "  ║  ", " )═( ", " ¯ ¯ " },  // VICTORY
 };
 
-// Sprite sheet de enemigos 3 filas x 5 tipos x 5 cols
-// EnemyType: MONOEYE=0 SHEMUM=1 REAPER=2 REAPETTE=3 MEDUSA=4
+// Sprite sheet de enemigos — 3 filas x 5 tipos x 5 cols
 const char* const Renderer::ENEMY_SPRITES[5][3] = {
     { " ░◉░ ", "~~~~~", "     " },  // MONOEYE
     { "≈≈S≈≈", "/\\-\\ ", "     " },  // SHEMUM
@@ -35,6 +36,7 @@ const char* const Renderer::ENEMY_SPRITES[5][3] = {
     { " (r) ", " /|\\ ", "     " },  // REAPETTE
     { "~<G>~", "║|||║", "▓▓▓▓▓" },  // MEDUSA
 };
+
 
 Renderer::Renderer() {
     printf("\033[?25l");
@@ -44,13 +46,13 @@ Renderer::Renderer() {
     clear();
 }
 
+
 void Renderer::render(const GameState& gs, const Level& level) {
-    // No dibujar si no estamos en gameplay activo
+    // Guard: no dibujar fuera de gameplay activo
     GameStatus st = gs.status.load();
     if (st != GameStatus::RUNNING && st != GameStatus::BOSS &&
         st != GameStatus::PAUSED)
         return;
-
     ++frame_;
     clear();
 
@@ -65,7 +67,7 @@ void Renderer::render(const GameState& gs, const Level& level) {
     // Fondo primero 
     drawBackground(gs.phase.load(), gs.status.load());
 
-    // Plataformas con '=' ASCII
+    // Plataformas con '=' ASCII 
     for (auto& p : level.getPlatforms())
         for (int i = 0; i < p.length; ++i)
             put(p.x + i, p.y + GAME_ROW_START, '=');
@@ -78,7 +80,7 @@ void Renderer::render(const GameState& gs, const Level& level) {
         }
     }
 
-    // Proyectiles enemigos
+    // Proyectiles enemigos — ASCII en buffer
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.enemyProjMutex));
         for (int i = 0; i < MAX_ENEMY_PROJ; ++i)
@@ -88,7 +90,7 @@ void Renderer::render(const GameState& gs, const Level& level) {
             }
     }
 
-    // Proyectiles del jugador 
+    // Proyectiles del jugador — ASCII en buffer
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.playerProjMutex));
         for (int i = 0; i < MAX_PLAYER_PROJ; ++i) {
@@ -113,13 +115,17 @@ void Renderer::render(const GameState& gs, const Level& level) {
         }
     }
 
-    drawHUD(gs);
+    // flush() primero: dibuja sprites y plataformas del buffer
     flush();
     memcpy(front_, back_, sizeof(back_));
+    // drawHUD() después: directo a terminal, siempre encima del juego
+    drawHUD(gs);
     fflush(stdout);
 }
 
 // 4 fondos: fase 1 = Templo Celestial, 2 = Ruinas, 3 = Fortaleza, BOSS = Medusa
+
+
 void Renderer::drawBackground(int phase, GameStatus status) {
     const int top = GAME_ROW_START;
     const int mid = GAME_ROW_START + 8;
@@ -188,6 +194,7 @@ void Renderer::drawEnemySprite(int x, int y, EnemyType type, Direction dir) {
 }
 
 // pitMoving_ detecta movimiento real — pit.facing siempre es LEFT o RIGHT,
+
 SpriteFrame Renderer::getPlayerFrame(const Player& pit) const {
     if (pit.invincibleTicks > 0 && frame_ % 6 < 3) return SpriteFrame::DAMAGE;
     if (!pit.onGround)                              return SpriteFrame::JUMP;
@@ -196,21 +203,24 @@ SpriteFrame Renderer::getPlayerFrame(const Player& pit) const {
     return SpriteFrame::IDLE;
 }
 
+
 void Renderer::drawHUD(const GameState& gs) {
+  
+
     HUDData h = HUD::getSnapshot();
 
-    putStr(0, 0, "╔");
-    for (int x = 1; x < SCREEN_WIDTH - 1; ++x) putStr(x, 0, "═");
-    putStr(SCREEN_WIDTH - 1, 0, "╗");
+    // Fila 0: ╔═══════════════════════════════════════════════════════════════╗
+    mv(1, 1);
+    printf("╔");
+    for (int x = 1; x < SCREEN_WIDTH - 1; ++x) printf("═");
+    printf("╗");
 
-    putStr(0, 1, "║");
-    putStr(SCREEN_WIDTH - 1, 1, "║");
-
+    // Fila 1: ║ LVS:♥♥♥  HP:[####--]  score  fase  enemigos  corazones ║
     char lives[16];
     snprintf(lives, sizeof(lives), " %s%s%s ",
-        h.lives > 0 ? "\xe2\x99\xa5" : "\xe2\x99\xa1",
-        h.lives > 1 ? "\xe2\x99\xa5" : "\xe2\x99\xa1",
-        h.lives > 2 ? "\xe2\x99\xa5" : "\xe2\x99\xa1");
+        h.lives > 0 ? "♥" : "♡",
+        h.lives > 1 ? "♥" : "♡",
+        h.lives > 2 ? "♥" : "♡");
 
     char hpBar[32];
     hpBar[0] = '[';
@@ -225,28 +235,41 @@ void Renderer::drawHUD(const GameState& gs) {
         for (auto& e : gs.enemies) if (e.alive) ++alive;
     }
 
-    char line[200];
-    snprintf(line, sizeof(line),
-        " LVS:%s  HP:%s  *%05d  F:%d  Enm:%02d  Hrt:%02d ",
-        lives, hpBar, h.score, h.phase, alive, h.hearts);
-    putStr(1, 1, line);
+    mv(1, 2);
+    printf("║ LVS:%s HP:%s ★%05d  F:%d  Enm:%02d  Hrt:%02d",
+           lives, hpBar, h.score, h.phase, alive, h.hearts);
+    // Rellenar hasta el borde derecho y cerrar
+    mv(SCREEN_WIDTH, 2);
+    printf("║");
 
-    putStr(0, 2, "╠");
-    for (int x = 1; x < SCREEN_WIDTH - 1; ++x) putStr(x, 2, "═");
-    putStr(SCREEN_WIDTH - 1, 2, "╣");
+    // Fila 2: ╠═══════════════════════════════════════════════════════════════╣
+    mv(1, 3);
+    printf("╠");
+    for (int x = 1; x < SCREEN_WIDTH - 1; ++x) printf("═");
+    printf("╣");
 
-    putStr(0, 3, "║");
-    putStr(SCREEN_WIDTH - 1, 3, "║");
+    // Fila 3: ║ controles contextuales ║
+    mv(1, 4);
+    printf("║");
     const char* ctrl = " [SPC]►Fire  [W]▲Jump  [A/D]Move  [P]Pause  [ESC]Menu";
     if (h.status == GameStatus::PAUSED)
         ctrl = " ⏸ PAUSED ⏸   [P] Resume                  [ESC] Main Menu";
     if (h.status == GameStatus::BOSS)
         ctrl = " ⚠ BOSS: MEDUSA!  Defeat the Gorgon and rescue Palutena!  ⚠";
-    putStr(1, 3, ctrl);
+    printf("%s", ctrl);
+    mv(SCREEN_WIDTH, 4);
+    printf("║");
+
+    fflush(stdout);
 }
+
 
 void Renderer::renderMenu() {
     cls();
+    // Limpiar buffers para que flush() no redibuje residuos del juego
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
+    fflush(stdout);
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║  ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
@@ -281,8 +304,12 @@ void Renderer::renderMenu() {
     fflush(stdout);
 }
 
+
 void Renderer::renderInstructions() {
     cls();
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
+    fflush(stdout);
     printf(COL_CYAN COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║           ─── MANUAL DEL HÉROE ───   Kid Icarus · Servant of Palutena     ║\n");
@@ -309,8 +336,12 @@ void Renderer::renderInstructions() {
     fflush(stdout);
 }
 
+
 void Renderer::renderScores() {
     cls();
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
+    fflush(stdout);
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║   ✦ ══════════════  SALÓN DE HÉROES DE PALUTENA  ══════════════ ✦          ║\n");
@@ -350,6 +381,7 @@ void Renderer::renderScores() {
     printf(COL_RESET);
     fflush(stdout);
 }
+
 
 void Renderer::renderShop(const GameState& gs) {
     cls();
@@ -407,8 +439,12 @@ void Renderer::renderPause(const GameState& gs) {
     fflush(stdout);
 }
 
+
 void Renderer::renderGameOver() {
     cls();
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
+    fflush(stdout);
     HUDData h = HUD::getSnapshot();
     printf(COL_RED COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -442,8 +478,12 @@ void Renderer::renderGameOver() {
     fflush(stdout);
 }
 
+
 void Renderer::renderVictory() {
     cls();
+    memset(front_, ' ', sizeof(front_));
+    memset(back_,  ' ', sizeof(back_));
+    fflush(stdout);
     HUDData h = HUD::getSnapshot();
     printf(COL_GOLD COL_BOLD);
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
@@ -494,6 +534,7 @@ void Renderer::put(int x, int y, char c) {
     if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
         back_[y][x] = c;
 }
+
 
 void Renderer::putStr(int x, int y, const char* s) {
     if (y < 0 || y >= SCREEN_HEIGHT) return;
