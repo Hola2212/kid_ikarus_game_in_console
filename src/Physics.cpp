@@ -59,112 +59,53 @@ void Physics::tick(
     pit.onGround = false;
 
     // =========================================
-    // Ignorar plataformas temporalmente
-    // (drop-through)
+    // Revisar plataformas (solo bajando)
+    // Ignora dropFromY: la plataforma específica
+    // que el jugador está atravesando.
     // =========================================
 
-    bool ignorePlatforms =
-        pit.dropThroughTicks > 0;
+    if (pit.velY >= 0) {
 
-    // =========================================
-    // Revisar plataformas
-    // =========================================
+        for (const auto& plat : level.getPlatforms()) {
 
-    if (!ignorePlatforms) {
+            // Solo ignorar la plataforma de la que se bajó
+            if (plat.y == pit.dropFromY)
+                continue;
 
-        // =====================================
-        // Movimiento HACIA ABAJO
-        // =====================================
+            bool inX =
+                pit.pos.x >= plat.x &&
+                pit.pos.x < plat.x + plat.length;
 
-        if (pit.velY >= 0) {
+            if (!inX)
+                continue;
 
-            for (const auto& plat : level.getPlatforms()) {
+            bool landsOnPlatform =
+                pit.pos.y <= plat.y - 1 &&
+                nextY     >= plat.y - 1;
 
-                bool inX =
-                    pit.pos.x >= plat.x &&
-                    pit.pos.x < plat.x + plat.length;
+            if (landsOnPlatform) {
 
-                if (!inX)
-                    continue;
+                pit.pos.y  = plat.y - 1;
+                pit.velY   = 0;
+                pit.onGround = true;
+                pit.dropFromY = -1;    // ya aterrizó, limpiar
 
-                // =================================
-                // ¿Aterriza sobre plataforma?
-                // =================================
+                clampToBounds(pit);
 
-                bool landsOnPlatform =
-                    pit.pos.y <= plat.y - 1 &&
-                    nextY >= plat.y - 1;
-
-                if (landsOnPlatform) {
-
-                    pit.pos.y = plat.y - 1;
-
-                    pit.velY = 0;
-
-                    pit.onGround = true;
-
-                    if (pit.dropThroughTicks > 0)
-                        pit.dropThroughTicks--;
-
-                    clampToBounds(pit);
-
-                    return;
-                }
-            }
-        }
-
-        // =====================================
-        // Movimiento HACIA ARRIBA
-        // =====================================
-
-        else {
-
-            for (const auto& plat : level.getPlatforms()) {
-
-                bool inX =
-                    pit.pos.x >= plat.x &&
-                    pit.pos.x < plat.x + plat.length;
-
-                if (!inX)
-                    continue;
-
-                // =================================
-                // ¿Golpea debajo de plataforma?
-                // =================================
-
-                bool hitsBottom =
-                    pit.pos.y >= plat.y &&
-                    nextY < plat.y;
-
-                if (hitsBottom) {
-
-                    pit.pos.y = plat.y + 1;
-
-                    pit.velY = 0;
-
-                    if (pit.dropThroughTicks > 0)
-                        pit.dropThroughTicks--;
-
-                    clampToBounds(pit);
-
-                    return;
-                }
+                return;
             }
         }
     }
+
+    // Las plataformas son de una sola dirección:
+    // solo bloquean desde arriba (aterrizaje).
+    // El jugador puede saltar a través de ellas desde abajo.
 
     // =========================================
     // Movimiento libre
     // =========================================
 
     pit.pos.y = nextY;
-
-    // =========================================
-    // Reducir timer de drop-through
-    // =========================================
-
-    if (pit.dropThroughTicks > 0)
-        pit.dropThroughTicks--;
 
     // =========================================
     // Clamp horizontal

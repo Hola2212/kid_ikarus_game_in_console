@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <mutex>
 #include "Constants.h"
 #include "GameState.h"
 
@@ -15,8 +16,11 @@ public:
 
     explicit Level(int phase);
 
-    // Construye la lista de plataformas para la fase actual
-    const std::vector<Platform>& getPlatforms() const { return platforms_; }
+    // Reconstruye el nivel para una nueva fase (thread-safe)
+    void rebuild(int phase);
+
+    // Devuelve copia de las plataformas (thread-safe frente a rebuild)
+    std::vector<Platform> getPlatforms() const;
 
     // Devuelve los enemigos iniciales de la fase (sin Medusa)
     std::vector<Enemy> spawnEnemies() const;
@@ -32,6 +36,7 @@ public:
 private:
     int                   phase_;
     std::vector<Platform> platforms_;
+    mutable std::mutex    mutex_;
 
     void buildPhase1();
     void buildPhase2();

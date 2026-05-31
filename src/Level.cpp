@@ -1,6 +1,24 @@
 #include "Level.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
+std::vector<Level::Platform> Level::getPlatforms() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return platforms_;
+}
+
+void Level::rebuild(int phase) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    phase_ = phase;
+    platforms_.clear();
+    switch (phase_) {
+        case 1: buildPhase1(); break;
+        case 2: buildPhase2(); break;
+        case 3: buildPhase3(); break;
+        default: buildPhase1(); break;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 Level::Level(int phase) : phase_(phase) {
 
     switch (phase_) {

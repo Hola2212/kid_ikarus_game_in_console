@@ -52,7 +52,7 @@ struct Player {
     int       hearts{0};         // moneda
     Direction facing{Direction::RIGHT};
     bool      crouching{false};
-    int dropThroughTicks = 0;
+    int       dropFromY{-1};   // y de la plataforma que se está atravesando (-1 = ninguna)
     bool      onGround{true};
     int       velY{0};           // velocidad vertical para gravedad/salto
     int invincibleTicks{0};  // ticks de invencibilidad tras recibir daño
@@ -66,6 +66,7 @@ struct GameState {
     std::atomic<bool>       running{false};     // Game loop activo
     std::atomic<int>        score{0};           // Puntuación del jugador
     std::atomic<bool>       restartRequested{false};
+    std::atomic<bool>       shopAdvanceRequested{false};
 
     // ── Jugador ───────────────────────────────────────────────────────────
     Player      pit;

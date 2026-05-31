@@ -254,6 +254,34 @@ void InputHandler::processInput(GameState& gs) {
         }
 
         // ==================================
+        // TIENDA
+        // ==================================
+
+        if (state == GameStatus::SHOP) {
+
+            if (key == 'c' || key == 'C') {
+
+                std::lock_guard<std::mutex> lock(gs.pitMutex);
+
+                if (gs.pit.hearts >= SHOP_HEART_COST &&
+                    gs.pit.hp    <  MAX_HP) {
+
+                    gs.pit.hearts -= SHOP_HEART_COST;
+                    gs.pit.hp     += SHOP_HP_GAIN;
+
+                    if (gs.pit.hp > MAX_HP)
+                        gs.pit.hp = MAX_HP;
+                }
+
+            } else if (key == 'q' || key == 'Q') {
+
+                gs.shopAdvanceRequested.store(true);
+            }
+
+            continue;
+        }
+
+        // ==================================
         // SOLO GAMEPLAY
         // ==================================
 
@@ -290,18 +318,13 @@ void InputHandler::processInput(GameState& gs) {
 
                 std::lock_guard<std::mutex> lock(gs.pitMutex);
 
-                // =========================================
-                // Activar caída a través de plataforma
-                // =========================================
+                // Solo bajar si no está en el suelo (plataforma más baja)
+                if (gs.pit.onGround &&
+                    gs.pit.pos.y < GAME_HEIGHT - 2) {
 
-                if (gs.pit.onGround) {
-
-                    gs.pit.dropThroughTicks = 8;
-
-                    gs.pit.onGround = false;
-
-                    // Empujar ligeramente hacia abajo
-                    gs.pit.pos.y += 1;
+                    gs.pit.dropFromY  = gs.pit.pos.y + 1;  // y de la plataforma actual
+                    gs.pit.onGround   = false;
+                    gs.pit.pos.y     += 1;                  // empujar hacia abajo
                 }
 
                 break;

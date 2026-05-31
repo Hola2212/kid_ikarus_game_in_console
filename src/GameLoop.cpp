@@ -218,12 +218,80 @@ void GameLoop::run() {
 
         if (gs.status.load() == GameStatus::RUNNING) {
 
+            CollisionSystem::checkAll(gs, *currentLevel_);
+
             // =========================================
-            // SOLO COLISIONES
-            // Física corre en Physics thread
+            // AVANCE DE FASE
             // =========================================
 
-            CollisionSystem::checkAll(gs, *currentLevel_);
+            bool atTop = false;
+            {
+                std::lock_guard<std::mutex> pl(gs.pitMutex);
+                atTop = gs.pit.onGround && gs.pit.pos.y <= 1;
+            }
+
+            if (atTop) {
+
+                int phase = gs.phase.load();
+
+                if (phase == 1) {
+
+                    gs.phase.store(2);
+                    currentLevel_->rebuild(2);
+
+                    {
+                        std::lock_guard<std::mutex> el(gs.enemyMutex);
+                        gs.enemies.clear();
+                        gs.enemies = currentLevel_->spawnEnemies();
+                    }
+
+                    {
+                        std::lock_guard<std::mutex> pl(gs.pitMutex);
+                        gs.pit.pos        = {SCREEN_WIDTH / 2, GAME_HEIGHT - 2};
+                        gs.pit.velY       = 0;
+                        gs.pit.onGround   = true;
+                        gs.pit.invincibleTicks = 15;
+                    }
+
+                    renderer.triggerFullRedraw();
+
+                } else if (phase == 2) {
+
+                    gs.status.store(GameStatus::SHOP);
+
+                } else if (phase == 3) {
+
+                    gs.status.store(GameStatus::VICTORY);
+                }
+            }
+        }
+
+        // =========================================
+        // AVANCE DESDE TIENDA → FASE 3
+        // =========================================
+
+        if (gs.shopAdvanceRequested.load()) {
+
+            gs.shopAdvanceRequested.store(false);
+
+            gs.phase.store(3);
+            currentLevel_->rebuild(3);
+
+            {
+                std::lock_guard<std::mutex> el(gs.enemyMutex);
+                gs.enemies.clear();
+                gs.enemies = currentLevel_->spawnEnemies();
+            }
+
+            {
+                std::lock_guard<std::mutex> pl(gs.pitMutex);
+                gs.pit.pos        = {SCREEN_WIDTH / 2, GAME_HEIGHT - 2};
+                gs.pit.velY       = 0;
+                gs.pit.onGround   = true;
+                gs.pit.invincibleTicks = 15;
+            }
+
+            gs.status.store(GameStatus::RUNNING);
         }
 
         // =====================
@@ -286,7 +354,12 @@ void GameLoop::run() {
 
                 case GameStatus::SHOP:
 
-                    renderer.renderShop(gs);
+                    if (lastRendered != GameStatus::SHOP) {
+
+                        renderer.renderShop(gs);
+
+                        lastRendered = GameStatus::SHOP;
+                    }
 
                     break;
 

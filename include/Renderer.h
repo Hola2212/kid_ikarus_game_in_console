@@ -17,6 +17,7 @@ class Renderer {
 public:
     Renderer();
     void render(const GameState& gs, const Level& level);
+    void triggerFullRedraw() { fullRedraw_ = true; }
     void renderMenu();
     void renderInstructions();
     void renderScores();
