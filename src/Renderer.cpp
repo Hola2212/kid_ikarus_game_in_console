@@ -110,17 +110,6 @@ void Renderer::render(const GameState& gs, const Level& level) {
         fullRedraw_ = false;
     }
 
-    // Plataformas — se redibujan cada frame porque los sprites las sobreescriben
-    for (auto& p : level.getPlatforms()) {
-        int drawY = p.y + GAME_ROW_START;
-        if (drawY < GAME_ROW_START || drawY >= SCREEN_HEIGHT) continue;
-        int x0 = p.x;
-        int x1 = std::min(p.x + p.length, SCREEN_WIDTH);
-        if (x0 >= x1) continue;
-        mv(x0 + 1, drawY + 1);
-        for (int i = x0; i < x1; ++i) printf("=");
-    }
-
     // ── Detectar movimiento de Pit ────────────────────────────────────────────
     {
         std::lock_guard<std::mutex> sl(const_cast<std::mutex&>(gs.pitMutex));
@@ -205,6 +194,18 @@ void Renderer::render(const GameState& gs, const Level& level) {
                 prevEnemyActive_[idx] = false;
             }
         }
+    }
+
+    // Plataformas — después de todos los clearSprite(), antes de dibujar sprites
+    // Así se restauran los '=' borrados por clearSprite() en este mismo frame
+    for (auto& p : level.getPlatforms()) {
+        int drawY = p.y + GAME_ROW_START;
+        if (drawY < GAME_ROW_START || drawY >= SCREEN_HEIGHT) continue;
+        int x0 = p.x;
+        int x1 = std::min(p.x + p.length, SCREEN_WIDTH);
+        if (x0 >= x1) continue;
+        mv(x0 + 1, drawY + 1);
+        for (int i = x0; i < x1; ++i) printf("=");
     }
 
     // ── Pit ───────────────────────────────────────────────────────────────────
