@@ -47,20 +47,32 @@ Renderer::Renderer() {
 }
 
 void Renderer::render(const GameState& gs, const Level& level) {
-    // Guard: no dibujar fuera de gameplay activo
+
     GameStatus st = gs.status.load();
-    if (st != GameStatus::RUNNING && st != GameStatus::BOSS &&
+
+    if (st != GameStatus::RUNNING &&
+        st != GameStatus::BOSS &&
         st != GameStatus::PAUSED)
         return;
+
     ++frame_;
-    // Si veníamos de PAUSA, limpiar el área del overlay antes de redibujar
-    if (prevStatus_ == GameStatus::PAUSED && st != GameStatus::PAUSED) {
+
+    // PRUEBA TEMPORAL
+    cls();
+
+    if (prevStatus_ == GameStatus::PAUSED &&
+        st != GameStatus::PAUSED) {
+
         cls();
+
         memset(front_, ' ', sizeof(front_));
         memset(back_,  ' ', sizeof(back_));
     }
+
     prevStatus_ = st;
+
     clear();
+
 
     // Detectar movimiento real de Pit para elegir IDLE vs WALK
     // Se reutiliza el pitMutex existente — sin mutex nuevo
