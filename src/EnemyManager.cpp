@@ -340,6 +340,6 @@ void EnemyManager::spawnReapettes(Enemy& reaper,GameState& gs,std::vector<Enemy>
 
 // ─────────────────────────────────────────────────────────────────────────────
 int EnemyManager::speedForPhase(int phase) {
-    // Factor multiplicador: fase 1 → 1x, fase 2 → 2x, fase 3 → 3x
-    return std::max(1, phase);
+    // Fase 1 → 1x, fase 2+ → 2x (cap para que sea jugable)
+    return (phase >= 2) ? 2 : 1;
 }
