@@ -230,7 +230,18 @@ void GameLoop::run() {
                 atTop = gs.pit.onGround && gs.pit.pos.y <= 1;
             }
 
-            if (atTop) {
+            bool allEnemiesDead = true;
+            {
+                std::lock_guard<std::mutex> el(gs.enemyMutex);
+                for (const auto& enemy : gs.enemies) {
+                    if (enemy.alive) {
+                        allEnemiesDead = false;
+                        break;
+                    }
+                }
+            }
+
+            if (atTop && allEnemiesDead) {
 
                 int phase = gs.phase.load();
 
