@@ -185,5 +185,6 @@ bool ProjectileManager::hitsPlayer(const Projectile& p, const Player& pit) {
 }
 
 bool ProjectileManager::hitsEnemy(const Projectile& p, const Enemy& e) {
-    return (p.pos.x == e.pos.x && p.pos.y == e.pos.y);
+    return (std::abs(p.pos.x - e.pos.x) <= 1 &&
+            std::abs(p.pos.y - e.pos.y) <= 1);
 }

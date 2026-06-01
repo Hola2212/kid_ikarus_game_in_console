@@ -147,12 +147,10 @@ std::vector<Enemy> Level::spawnEnemies() const {
     // FASE 1
     // ─────────────────────────
 
-    if (phase_ >= 1) {
+    if (phase_ == 1) {
 
         addEnemy(EnemyType::MONOEYE, 5,  14);
-
         addEnemy(EnemyType::MONOEYE, 20, 11);
-
         addEnemy(EnemyType::MONOEYE, 10, 6);
     }
 
@@ -160,52 +158,29 @@ std::vector<Enemy> Level::spawnEnemies() const {
     // FASE 2
     // ─────────────────────────
 
-    if (phase_ >= 2) {
+    else if (phase_ == 2) {
 
+        addEnemy(EnemyType::MONOEYE, 5,  14);
         addEnemy(EnemyType::MONOEYE, 30, 8);
+        addEnemy(EnemyType::MONOEYE, 10, 6);
 
-        addEnemy(
-            EnemyType::SHEMUM,
-            8,
-            GAME_HEIGHT - 2
-        );
-
-        addEnemy(
-            EnemyType::SHEMUM,
-            22,
-            GAME_HEIGHT - 2
-        );
+        addEnemy(EnemyType::SHEMUM,  8,  GAME_HEIGHT - 2);
+        addEnemy(EnemyType::SHEMUM,  22, GAME_HEIGHT - 2);
     }
 
     // ─────────────────────────
     // FASE 3
     // ─────────────────────────
 
-    if (phase_ >= 3) {
+    else if (phase_ == 3) {
 
-        addEnemy(EnemyType::MONOEYE, 15, 3);
+        addEnemy(EnemyType::MONOEYE, 15, 5);
+        addEnemy(EnemyType::MONOEYE, 40, 8);
 
-        addEnemy(
-            EnemyType::SHEMUM,
-            12,
-            GAME_HEIGHT - 2
-        );
+        addEnemy(EnemyType::SHEMUM,  12, GAME_HEIGHT - 2);
 
-        addEnemy(
-            EnemyType::REAPER,
-            6,
-            GAME_HEIGHT - 2,
-            3,
-            2
-        );
-
-        addEnemy(
-            EnemyType::REAPER,
-            28,
-            GAME_HEIGHT - 2,
-            3,
-            2
-        );
+        addEnemy(EnemyType::REAPER,   6, GAME_HEIGHT - 2, 3, 2);
+        addEnemy(EnemyType::REAPER,  55, GAME_HEIGHT - 2, 3, 2);
     }
 
     return enemies;
