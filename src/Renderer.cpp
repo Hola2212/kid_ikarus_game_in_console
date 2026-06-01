@@ -501,14 +501,14 @@ void Renderer::renderShop(const GameState& gs) {
     printf("║                « Restore thy strength, brave hero »                          ║\n");
     printf("╠══════════════════════════════════════════════════════════════════════════════╣\n");
     printf("║                                                                              ║\n");
-    printf("║   Corazones actuales:  ♦ %-4d       HP actual: %2d / %2d                     ║\n",
+    printf("║   Corazones actuales:  ♦ %-4d       HP actual: %2d / %2d                       ║\n",
            hearts, hp, MAX_HP);
     printf("║                                                                              ║\n");
     printf("║   HP  [");
     for (int i = 0; i < MAX_HP; ++i) printf("%c", i < hp ? '#' : '-');
-    printf("]                                               ║\n");
+    printf("]                                                           ║\n");
     printf("║                                                                              ║\n");
-    printf("║   [C]  Comprar +%d HP   (cuesta %d corazones)                                ║\n",
+    printf("║   [C]  Comprar +%d HP   (cuesta %d corazones)                                  ║\n",
            SHOP_HP_GAIN, SHOP_HEART_COST);
     printf("║   [Q]  Continuar a Fase 3  ─── El jefe final aguarda...                      ║\n");
     printf("║                                                                              ║\n");
@@ -601,7 +601,7 @@ void Renderer::renderVictory() {
     printf("║        ─── Medusa derrotada. Palutena libre. El Olimpo se regocija. ───      ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE);
-    printf("║              \\(Ö)/        \\(Ö)/        \\(Ö)/                              ║\n");
+    printf("║               \\(Ö)/         \\(Ö)/         \\(Ö)/                              ║\n");
     printf("║                 ║             ║             ║                                ║\n");
     printf("║                )═(           )═(           )═(                               ║\n");
     printf("║                ¯ ¯           ¯ ¯           ¯ ¯                               ║\n");
@@ -610,7 +610,7 @@ void Renderer::renderVictory() {
     printf("║   ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦  ║\n");
     printf("║                                                                              ║\n");
     printf(COL_WHITE COL_BOLD);
-    printf("║  ★ Score: %05d   ·   Corazones: %02d   ·   Fase: %d   ·   ¡Gloria Eterna! ★ ║\n",
+    printf("║  ★ Score: %05d   ·   Corazones: %02d   ·   Fase: %d   ·   ¡Gloria Eterna! ★    ║\n",
            h.score, h.hearts, h.phase);
     printf(COL_GOLD);
     printf("║                                                                              ║\n");
