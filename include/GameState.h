@@ -68,6 +68,7 @@ struct GameState {
     std::atomic<int>        score{0};           // Puntuación del jugador
     std::atomic<bool>       restartRequested{false};
     std::atomic<bool>       shopAdvanceRequested{false};
+    std::atomic<bool>       cpuMode{false};
 
     // ── Jugador ───────────────────────────────────────────────────────────
     Player      pit;

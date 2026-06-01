@@ -102,8 +102,7 @@ void ProjectileManager::tickPlayer(GameState& gs, const Level& level) {
                         e.alive = false;
                         std::lock_guard<std::mutex> pl(gs.pitMutex);
                         gs.pit.hearts += e.heartsOnDeath;
-                        // Fix puntaje: sumar 10 puntos por enemigo eliminado
-                        gs.score.fetch_add(10);
+                        gs.score.fetch_add(100);
                     }
                     hitEnemy = true;
                     break;
@@ -151,6 +150,9 @@ void ProjectileManager::tickEnemy(GameState& gs, const Level& level) {
             } else {
                 gs.pit.hp--;
                 gs.pit.invincibleTicks = 15;
+                // Restar 10 puntos al recibir daño (mínimo 0)
+                int s = gs.score.load();
+                if (s > 0) gs.score.store(std::max(0, s - 10));
                 if (gs.pit.hp <= 0) {
                     gs.pit.lives--;
                     gs.pit.hp = MAX_HP;

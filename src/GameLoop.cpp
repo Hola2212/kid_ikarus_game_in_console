@@ -218,6 +218,9 @@ void GameLoop::run() {
 
         if (gs.status.load() == GameStatus::RUNNING) {
 
+            if (gs.cpuMode.load())
+                CpuPlayer::tick(gs, *currentLevel_);
+
             CollisionSystem::checkAll(gs, *currentLevel_);
 
             // =========================================

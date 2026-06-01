@@ -114,6 +114,8 @@ void InputHandler::processInput(GameState& gs) {
 
             if (key == '1' || key == '2') {
 
+                gs.cpuMode.store(key == '2');
+
                 gs.score.store(0);
                 gs.phase.store(1);
 
@@ -286,6 +288,10 @@ void InputHandler::processInput(GameState& gs) {
         // ==================================
 
         if (state != GameStatus::RUNNING)
+            continue;
+
+        // En modo CPU el teclado no controla a Pit
+        if (gs.cpuMode.load())
             continue;
 
         switch (key) {

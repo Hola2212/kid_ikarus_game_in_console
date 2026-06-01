@@ -117,6 +117,9 @@ void CollisionSystem::damagePlayer(GameState& gs, int amount) {
 
     gs.pit.invincibleTicks = 15;
 
+    int s = gs.score.load();
+    if (s > 0) gs.score.store(std::max(0, s - 10));
+
     if (gs.pit.hp <= 0) {
 
         gs.pit.lives--;

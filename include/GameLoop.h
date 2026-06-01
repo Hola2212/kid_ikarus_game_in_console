@@ -10,6 +10,7 @@
 #include "Physics.h"
 #include "ProjectileManager.h"
 #include "HUD.h"
+#include "CpuPlayer.h"
 
 #include <memory>
 #include <thread>
