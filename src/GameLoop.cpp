@@ -143,7 +143,13 @@ void GameLoop::resetGame() {
     gs.phase.store(1);
 
     // =========================================
-    // LIMPIAR ENEMIGOS
+    // VOLVER A CONSTRUIR FASE 1
+    // =========================================
+
+    currentLevel_->rebuild(1);
+
+    // =========================================
+    // REGENERAR ENEMIGOS DE FASE 1
     // =========================================
 
     {
@@ -196,20 +202,14 @@ void GameLoop::run() {
         input.processInput(gs);
 
         // =========================================
-        // RESTART — respawnear enemigos y reanudar
+        // RESTART COMPLETO DEL JUEGO
         // =========================================
 
         if (gs.restartRequested.load()) {
 
             gs.restartRequested.store(false);
 
-            {
-                std::lock_guard<std::mutex> lock(gs.enemyMutex);
-                gs.enemies.clear();
-                gs.enemies = currentLevel_->spawnEnemies();
-            }
-
-            gs.status.store(GameStatus::RUNNING);
+            resetGame();
         }
 
         // =====================
