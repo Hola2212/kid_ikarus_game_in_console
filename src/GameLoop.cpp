@@ -42,7 +42,7 @@ GameLoop::GameLoop() {
 
     gs.running.store(true);
 
-    gs.status.store(GameStatus::MENU);
+    gs.status.store(GameStatus::SPLASH);
 
     // =========================================
     // LANZAR THREADS
@@ -304,6 +304,21 @@ void GameLoop::run() {
             GameStatus state = gs.status.load();
 
             switch (state) {
+
+                case GameStatus::SPLASH:
+                {
+                    renderer.renderSplash();
+
+                    std::this_thread::sleep_for(
+                        std::chrono::seconds(3)
+                    );
+
+                    lastRendered = static_cast<GameStatus>(-1);
+
+                    gs.status.store(GameStatus::MENU);
+
+                    break;
+                }
 
                 case GameStatus::MENU:
 

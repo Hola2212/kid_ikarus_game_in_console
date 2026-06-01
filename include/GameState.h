@@ -7,6 +7,7 @@
 
 // ─── Enumeraciones ────────────────────────────────────────────────────────────
 enum class GameStatus {
+    SPLASH,
     MENU,
     INSTRUCTIONS,
     SCORES,
